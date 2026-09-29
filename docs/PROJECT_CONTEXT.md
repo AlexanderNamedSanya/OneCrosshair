@@ -22,3 +22,7 @@ Run the client matrix in API_RESEARCH.md. Prioritize actual LibAddonMenu layout,
 ## Collaboration rules
 
 Read ARCHITECTURE.md, DESIGN_SYSTEM.md and this document before follow-up work. Keep modules separated, update documentation when contracts change, and commit code changes. No source repository, client executable, or third-party addon library was provided in the initial workspace.
+
+## Automatic deployment
+
+The user authorizes copying every addon update to `C:\Users\Public\Documents\Elder Scrolls Online\live\AddOns\OneCrosshair`. Run `tools/deploy.ps1` after changes; it copies runtime files and verifies their hashes, without deploying research/tests/docs or modifying other addons and SavedVariables. This is part of each update workflow, not a background file watcher. LibAddonMenu-2.0 was found in the target AddOns directory. Reload the ESO UI to load deployed changes.
