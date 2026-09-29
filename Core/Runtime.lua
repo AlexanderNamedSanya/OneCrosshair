@@ -40,15 +40,16 @@ function O.Runtime.Update(self)
     O.CrosshairController.Update(self.crosshair, state, s.crosshairOpacity, now)
     local fills = { health = O.Resource.Read(self.health, now), magicka = O.Resource.Read(self.magicka, now),
         stamina = O.Resource.Read(self.stamina, now) }
-    local critical, dim = O.CriticalState.Read(s.criticalState, self.health.fraction)
+    local _, dim, criticalGlow = O.CriticalState.Read(s.criticalState, self.health.fraction)
     local healthAlpha
     for _, name in ipairs({ "health", "magicka", "stamina" }) do
         local resource = self[name]
         local alpha = O.VisibilityController.Alpha(self.visibility, name, s.visibility, s.resources,
             state.combat, resource.fraction < 1, now) * s.hudOpacity
         if name == "health" then healthAlpha = alpha else alpha = alpha * dim end
-        local glow = name == "health" and critical or (name ~= "health" and O.LowResource.Active(s.lowResource, resource.fraction))
-        O.ResourceRing.Draw(self.ring, name, fills[name], resource.color, alpha, glow)
+        local glow = name ~= "health" and O.LowResource.Active(s.lowResource, resource.fraction)
+        O.ResourceRing.Draw(self.ring, name, fills[name], resource.color, alpha, glow,
+            name == "health" and criticalGlow or nil)
     end
     O.ResourceRing.Draw(self.ring, "shield", O.Shield.Read(self.shield, self.health.maximum, now),
         O.Shield.color, s.shield and healthAlpha or 0, false)
@@ -57,7 +58,7 @@ function O.Runtime.Update(self)
     local active = heavy ~= nil or (s.gcd and gcd.active)
     local alpha = O.VisibilityController.Alpha(self.visibility, "bottom", s.visibility,
         s.gcd or heavy ~= nil, state.combat, active, now) * s.hudOpacity
-    local fill = heavy or (gcd.active and gcd.progress or 1)
-    local color = gcd.gold and heavy == nil and O.GCD.goldColor or O.GCD.idleColor
-    O.ResourceRing.Draw(self.ring, "bottom", fill, color, alpha * (active and 1 or .25), false)
+    local fill, color, intensity = O.GCD.Presentation(gcd)
+    if heavy ~= nil then fill, color, intensity = heavy, O.GCD.idleColor, 1 end
+    O.ResourceRing.Draw(self.ring, "bottom", fill, color, alpha * intensity, false)
 end

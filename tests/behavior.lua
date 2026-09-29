@@ -31,9 +31,9 @@ test("dynamic and combat hold/fade, mode change and independent enable", functio
 end)
 test("actual variable GCD timing, local cooldown exclusion and immediate idle", function()
     local g = O.GCD.New()
-    T.cooldowns = {[3]={900,1200,true}, [4]={5000,10000,false}}
-    O.GCD.Read(g); assert(g.active); close(g.progress,.25); assert(not g.gold)
-    T.cooldowns = {[3]={0,1200,true}}; O.GCD.Read(g); assert(not g.active)
+    T.cooldowns = {[3]={900,1200,true,ACTION_TYPE_ABILITY}, [4]={5000,10000,false}}
+    O.GCD.Read(g); assert(g.active); close(g.progress,.25); assert(not g.ready)
+    T.cooldowns = {[3]={0,1200,true,ACTION_TYPE_ABILITY}}; O.GCD.Read(g); assert(not g.active)
 end)
 test("resources smooth and shield clamped against maximum health", function()
     local h = O.Health.New(); close(O.Resource.Read(h,0),1)
@@ -116,4 +116,89 @@ test("resources disabled does not hide enabled GCD; shield follows health", func
     assert(O.runtime.ring.arcs.bottom.alpha > 0)
     O.settings.visibility = "OFF"; O.Runtime.Update(O.runtime)
     close(O.runtime.ring.arcs.bottom.alpha,0)
+end)
+test("ready is actual weapon availability, never a GCD percentage", function()
+    local g = O.GCD.New()
+    T.weaponUsable = true
+    T.cooldowns = {[3]={1190,1200,true,ACTION_TYPE_ABILITY}, [1]={30,100,false}}
+    O.GCD.Read(g); assert(not g.ready)
+    T.cooldowns[1] = {0,100,false}; O.GCD.Read(g); assert(g.ready)
+    local fill,color,alpha = O.GCD.Presentation(g)
+    close(fill,1); assert(color == O.GCD.readyColor); close(alpha,1)
+    T.weaponFailure = true; O.GCD.Read(g); assert(not g.ready)
+    T.weaponFailure = false; T.weaponUsable = false
+    T.cooldowns[3] = {1,1200,true,ACTION_TYPE_ABILITY}; O.GCD.Read(g); assert(not g.ready)
+    T.weaponUsable = true; O.GCD.Read(g); assert(g.ready)
+    T.cooldowns[3] = {0,1200,true,ACTION_TYPE_ABILITY}; O.GCD.Read(g)
+    assert(not g.active and not g.ready)
+    fill,color,alpha = O.GCD.Presentation(g)
+    close(fill,1); assert(color == O.GCD.idleColor); close(alpha,.25)
+end)
+test("physical slots 3..8 only, ultimate included, item globals rejected", function()
+    local g = O.GCD.New()
+    T.cooldowns = {[2]={1000,1000,true,ACTION_TYPE_ABILITY}, [3]={100,500,true,ACTION_TYPE_ITEM}}
+    O.GCD.Read(g); assert(not g.active)
+    T.cooldowns[8] = {100,800,true,ACTION_TYPE_CRAFTED_ABILITY}
+    O.GCD.Read(g); assert(g.active); close(g.progress,.875)
+    T.cooldowns = {}
+end)
+test("ready capability missing or empty weapon never claims readiness", function()
+    local g = O.GCD.New()
+    T.cooldowns = {[3]={100,800,true,ACTION_TYPE_ABILITY}}
+    T.emptyWeapon = true; O.GCD.Read(g); assert(g.active and not g.ready)
+    T.emptyWeapon = false
+    local usable = IsSlotUsable; IsSlotUsable = nil
+    O.GCD.Read(g); assert(g.active and not g.ready); IsSlotUsable = usable
+end)
+test("critical glow spans empty HP without solid fill and removes immediately", function()
+    local ring = O.runtime.ring
+    local _,dim,glow = O.CriticalState.Read(true,.1)
+    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false,glow)
+    close(ring.arcs.health.fill,.1); close(dim,.35)
+    for _,point in ipairs(ring.arcs.health) do
+        close(point.glow.color[4],.12)
+        if point.threshold > .12 then close(point.control.color[4],0) end
+    end
+    _,dim,glow = O.CriticalState.Read(true,.251)
+    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false,glow)
+    close(dim,1)
+    for _,point in ipairs(ring.arcs.health) do close(point.glow.color[4],0) end
+    _,_,glow = O.CriticalState.Read(false,.1); assert(glow == nil)
+    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,0,false,.12)
+    for _,point in ipairs(ring.arcs.health) do close(point.glow.color[4],0) end
+end)
+test("separate shallow bar geometry has small clear gaps and unchanged weight", function()
+    local ring = O.runtime.ring
+    local a,b = ring.arcs.health[64].control,ring.arcs.stamina[64].control
+    local distance = math.sqrt((a.anchor[4]-b.anchor[4])^2 + (a.anchor[5]-b.anchor[5])^2)
+    assert(distance > 6 and distance < 8)
+    local top = ring.arcs.health
+    assert(math.abs(top[1].control.anchor[5]-top[32].control.anchor[5]) < 6)
+    close(a.width,2); close(ring.arcs.shield[1].control.width,4)
+    close(O.PresetRegistry.Get("dot").elements[1].size,3)
+end)
+test("heavy overrides green with gray, cancel restores GCD in same frame", function()
+    T.now = 5000; O.settings.visibility = "ALWAYS"; O.settings.resources = true
+    O.settings.gcd = true; O.settings.heavyChannel = true; T.weaponUsable = true
+    T.cooldowns = {[3]={100,800,true,ACTION_TYPE_ABILITY}}
+    O.HeavyChannel.provider = {Read=function() return {active=true,startMs=4000,endMs=6000} end}
+    O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.bottom.fill,.5); assert(O.runtime.ring.arcs.bottom.color == O.GCD.idleColor)
+    O.HeavyChannel.provider = nil; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.bottom.fill,1); assert(O.runtime.ring.arcs.bottom.color == O.GCD.readyColor)
+    T.cooldowns = {}; O.Runtime.Update(O.runtime)
+    assert(O.runtime.ring.arcs.bottom.color == O.GCD.idleColor)
+end)
+test("critical runtime dims only side resources and respects switches", function()
+    T.powers[1] = 10; T.now = 6000; O.Runtime.Update(O.runtime)
+    T.now = 6200; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.health.fill,.1)
+    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity*.35)
+    close(O.runtime.ring.arcs.bottom.alpha, O.settings.hudOpacity*.25)
+    close(O.runtime.crosshair.elements[1].control.color[2],1)
+    O.settings.criticalState = false; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
+    close(O.runtime.ring.arcs.health[1].glow.color[4],0)
+    O.settings.criticalState = true; T.powers[1] = 26; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
 end)

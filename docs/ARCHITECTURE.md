@@ -16,10 +16,10 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 | ReticleReplacement | Reversible hide of the vanilla decorative texture only |
 | PresetRegistry | Ordered registry, ID lookup and default fallback |
 | CrosshairController | Texture pool and animated preset coordinates/alpha/rotation; color and feedback |
-| ResourceRing | Fixed ellipse and rounded sampled arcs, including coincident shield geometry |
+| ResourceRing | Four fixed shallow bowed bars with rounded samples, coincident shield geometry, separate solid/glow layers |
 | Resource + Health/Magicka/Stamina | Live fractions, stable palette and 150 ms smoothing |
 | Shield | Shield fraction against maximum health, clamped and smoothed |
-| GCD | Read active-bar cooldowns flagged global; no constant duration |
+| GCD | Read ability-type globals on physical slots 3..8; derive green availability from LA slot state/cooldown; own bottom presentation |
 | Effects | Presentation rules and conservative feedback event correlation |
 | Preview | Isolated Normal/Target/Block examples, immediate preset changes |
 | Settings | Account-wide SavedVariables validation and LibAddonMenu UI |
@@ -32,7 +32,9 @@ An optional pure presentation function `combatFeedback(index, x, y, pulse)` retu
 
 ## Timing limitations
 
-HeavyChannel is a capability boundary, currently without a provider. A future verified provider's `Read(now)` returns `{active, startMs, endMs}` or nil each frame. Cancelled timing must become nil immediately, restoring the current GCD. This is an internal contract, not an invented ESO API. Pursuit and weaving readiness stay unasserted pending reliable evidence; see API_RESEARCH.md.
+HeavyChannel is a capability boundary, currently without a provider. A future verified provider's `Read(now)` returns `{active, startMs, endMs}` or nil each frame. Cancelled timing must become nil immediately, restoring the current GCD. This is an internal contract, not an invented ESO API. Pursuit stays unasserted. Green readiness is derived from live LA-slot availability during a skill GCD; it is not a server-certified optimal weaving or animation-cancel window. See API_RESEARCH.md.
+
+`GCD.Presentation` returns fill/color/intensity: idle is full gray at .25; active is actual progress at 1; ready is full green at 1. Runtime composes visibility and overrides this presentation with gray Heavy/Channel progress only when a verified provider returns data. `CriticalState.Read` supplies side dimming and a low-opacity full-geometry halo independently of health fraction; ResourceRing keeps solid and glow alpha separate.
 
 ## UI ownership
 

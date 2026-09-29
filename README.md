@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with a fixed resource ring. Initial version 0.1.0 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.1 targets the inspected ESO UI API **101051**.
 
 ## Installation
 
@@ -17,7 +17,7 @@ Dot with interpolated Normal/Target/Block geometry; combat red and normal white;
 ## Explicit API limitations
 
 - **Pursuit yellow**: no reliable general pursuit state was verified; the renderer supports yellow but the detector does not guess it from hostile targets or combat.
-- **Weaving gold**: no authoritative Light Attack readiness window was verified. GCD uses the actual reported global cooldown and returns immediately to idle, but does not show speculative gold.
+- **Green readiness**: derived from LA slot usability, absence of a non-cost failure and zero weapon cooldown while an ability GCD is active. The entire bottom bar becomes green; GCD completion immediately restores gray idle. This is client-reported action availability, not a guarantee of an optimal server-side weaving/animation-cancel moment. No timing constants are guessed.
 - **Heavy/Channel progress**: setting and presentation integration exist, but no built-in timing provider is enabled. Tooltip cast durations do not establish actual start/cancel/release. No simulated progress is shown.
 - **Combat feedback**: a direct damage result must match recent player action evidence. Periodic results, incoming damage, uncorrelated procs and healing do not trigger it. Abilities with differing slot/impact IDs may be intentionally missed; delayed impacts after 1.5 s are ignored. This evidence window is not a GCD timer.
 

@@ -34,10 +34,10 @@ if api_path.exists():
     api = api_path.read_text(encoding="utf-8")
     code = "\n".join(p.read_text(encoding="utf-8") for p in ROOT.rglob("*.lua")
                      if ".reference" not in p.parts and "tests" not in p.parts)
-    functions = set(re.findall(r"\b((?:Get|Is|Does)[A-Z]\w+)\(", code))
+    functions = set(re.findall(r"\b((?:Get|Is|Does|ActionSlotHas)[A-Z]\w+)\(", code))
     # GetString is an ESO Lua library function, not an engine API function.
     missing = [name for name in functions - {"GetString"} if f"* {name}(" not in api]
     assert not missing, missing
-    constants = set(re.findall(r"\b(?:COMBAT_MECHANIC_FLAGS|ACTION_RESULT|ACTION_SLOT_TYPE|COMBAT_UNIT_TYPE|EVENT|REGISTER_FILTER|ATTRIBUTE_VISUAL|STAT|ATTRIBUTE|ACTION_BAR)_[A-Z_]+\b", code)) - {"EVENT_MANAGER"}
+    constants = set(re.findall(r"\b(?:COMBAT_MECHANIC_FLAGS|ACTION_RESULT|ACTION_TYPE|ACTION_SLOT_TYPE|COMBAT_UNIT_TYPE|EVENT|REGISTER_FILTER|ATTRIBUTE_VISUAL|STAT|ATTRIBUTE|ACTION_BAR)_[A-Z_]+\b", code)) - {"EVENT_MANAGER"}
     assert all(f"* {name}" in api for name in constants), sorted(name for name in constants if f"* {name}" not in api)
     print("PASS engine function names and enum/event names match API 101051")

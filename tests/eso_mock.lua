@@ -2,7 +2,8 @@
 CT_CONTROL, CT_TEXTURE, CT_LABEL, CENTER, TOPLEFT, TOPRIGHT, TOP = 1, 2, 3, 4, 5, 6, 7
 COMBAT_MECHANIC_FLAGS_HEALTH, COMBAT_MECHANIC_FLAGS_MAGICKA, COMBAT_MECHANIC_FLAGS_STAMINA = 1, 2, 4
 ATTRIBUTE_VISUAL_POWER_SHIELDING, STAT_MITIGATION, ATTRIBUTE_HEALTH = 10, 11, 12
-ACTION_BAR_FIRST_NORMAL_SLOT_INDEX, ACTION_BAR_ULTIMATE_SLOT_INDEX = 3, 8
+ACTION_BAR_FIRST_NORMAL_SLOT_INDEX, ACTION_BAR_ULTIMATE_SLOT_INDEX = 2, 7
+ACTION_TYPE_ABILITY, ACTION_TYPE_CRAFTED_ABILITY, ACTION_TYPE_ITEM = 1, 2, 3
 COMBAT_UNIT_TYPE_NONE, COMBAT_UNIT_TYPE_PLAYER = 0, 1
 ACTION_SLOT_TYPE_LIGHT_ATTACK, ACTION_SLOT_TYPE_HEAVY_ATTACK, ACTION_SLOT_TYPE_NORMAL_ABILITY = 1, 2, 3
 ACTION_RESULT_DAMAGE, ACTION_RESULT_CRITICAL_DAMAGE, ACTION_RESULT_DAMAGE_SHIELDED = 1, 2, 3
@@ -62,6 +63,9 @@ function GetSlotCooldownInfo(slot)
     return unpack(c)
 end
 function GetSlotBoundId(slot) return T.ids[slot] or 0 end
+function IsSlotUsed(slot) return T.ids[slot] ~= nil and not T.emptyWeapon end
+function IsSlotUsable(slot) return T.weaponUsable == true end
+function ActionSlotHasNonCostStateFailure(slot) return T.weaponFailure == true end
 RETICLE = {control=control(), reticleTexture=control()}
 function RETICLE:UpdateHiddenState() self.reticleTexture:SetHidden(T.stealth or false) end
 function ZO_PostHook(object,key,fn)

@@ -7,7 +7,7 @@ function O.CombatFeedback.Initialize(settings, crosshair)
         for id, expiry in pairs(pending) do if expiry < now then pending[id] = nil end end
         local id = GetSlotBoundId(slot)
         if id and id > 0 then pending[id] = now + 1500 end
-        if slot < ACTION_BAR_FIRST_NORMAL_SLOT_INDEX then pendingWeapon = now + 1500 end
+        if slot <= ACTION_BAR_FIRST_NORMAL_SLOT_INDEX then pendingWeapon = now + 1500 end
     end)
     EVENT_MANAGER:RegisterForEvent(O.name .. "Feedback", EVENT_COMBAT_EVENT,
         function(_, result, isError, _, _, actionType, _, sourceType, _, targetType,

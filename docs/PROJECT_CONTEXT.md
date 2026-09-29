@@ -13,7 +13,13 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 
 ## Known incomplete behaviors
 
-General pursuit detection, authoritative weaving/gold timing, and native Heavy/Channel start/end/cancellation are not verified and are deliberately inactive. The Heavy/Channel setting exists with a localized limitation tooltip. These are not claimed as complete features or emulated with guessed durations. The current milestone is ready for ESO client validation, not a claim of having been tested in-game.
+General pursuit detection and native Heavy/Channel start/end/cancellation are not verified and are deliberately inactive. The Heavy/Channel setting retains its localized limitation tooltip. GCD now derives green readiness from actual LA-slot availability during the current GCD; the API does not explicitly identify an optimal weaving window. These limitations are not emulated with guessed durations. The user has tested the initial build in-game; the follow-up changes have automated validation and still require another in-game visual/behavior pass.
+
+## Follow-up: HUD corrections (0.1.1)
+
+Four independent shallow curved bars replace the ellipse quadrants without enlarging Dot or adding settings. Critical health uses a separate full-length low-opacity halo while the solid red fill remains actual HP. GCD presentation now owns full-green readiness and instant idle restoration, using public LA-slot usability, failure and cooldown data. Corrected engine-to-Lua slot conversion (+1): physical 3..8 includes ultimate and excludes heavy slot 2; feedback's weapon-slot bound uses the same corrected convention. Item/collectible global cooldowns do not drive the ability GCD.
+
+Heavy/Channel was re-investigated using the API snapshot, native action bar/bindings, installed LibCombat and upstream OptimalWeave. No universal reliable cancellation path was established, so no native provider was enabled. The detailed evidence matrix is in API_RESEARCH.md. Validation now includes 19 behavioral scenarios plus locale/load-order and API-symbol checks.
 
 ## Next validation
 
