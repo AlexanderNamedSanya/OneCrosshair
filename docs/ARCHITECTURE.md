@@ -20,6 +20,7 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 | Resource + Health/Magicka/Stamina | Live fractions, stable palette and 150 ms smoothing |
 | Shield | Shield fraction against maximum health, clamped and smoothed |
 | GCD | Read ability-type globals on physical slots 3..8; derive green availability from LA slot state/cooldown; own bottom presentation |
+| GCDDiagnostics (temporary) | Opt-in, bounded memory capture of the exact readiness inputs; paginated `/ocgcd` output; removable after client investigation |
 | Effects | Presentation rules and conservative feedback event correlation |
 | Preview | Isolated Normal/Target/Block examples, immediate preset changes |
 | Settings | Account-wide SavedVariables validation and LibAddonMenu UI |
@@ -41,3 +42,11 @@ HeavyChannel is a capability boundary, currently without a provider. A future ve
 No CVar, secure gameplay function, vanilla method replacement or external hidden request is changed. A post-hook reapplies decorative texture hiding after ESO refreshes it; it is inert outside replacement ownership. Leaving gameplay or deactivating restores visibility through the original reticle's `UpdateHiddenState`. Interaction prompts, stealth eye, padlock and game input are preserved.
 
 Controls are pooled across preset changes; ring controls are allocated once. Arc writes are skipped when fill/color/opacity/glow are unchanged. Runtime does not depend on an OnUpdate handler on a hidden control.
+
+## 0.1.2 targeted diagnostics and geometry
+
+ResourceRing owns radius, half-span, bow, thickness, shield expansion, glow diameter and sample count in one local geometry table. Resource modules and preset sizes do not own or duplicate these values. All five solid layers (including shield) and glow anchors use the same positional profile.
+
+GCD's working active-bar cooldown selection and presentation are unchanged. During an active GCD it reads the four LA gates independently into `self.la` (including all four cooldown returns) and evaluates the original conjunction from that snapshot. This avoids short-circuiting away diagnostic evidence. `remaining`, `duration` and `sourceSlot` expose the already-selected GCD data; no independent timing detector is introduced.
+
+GCDDiagnostics loads immediately before GCD. Its capture function is called by the existing loop, with no added event handlers, timers or controls. A 15 s capture holds at most 256 rows, samples active cooldowns every 100 ms and also records predicate changes/completion. Active-frame blocker counts include every observed frame. The timeout is checked on the next update/command, including after a hidden HUD; no background work is scheduled. Eight rows per explicit page keep chat output bounded. State is memory-only, disabled by default and discarded on reload; SavedVariables and localization/settings are untouched. Technical diagnostic field labels are deliberately isolated in the temporary probe, not added to gameplay UI.

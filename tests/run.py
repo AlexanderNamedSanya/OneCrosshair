@@ -27,6 +27,7 @@ print("PASS manifest load order, initialization, account-wide save and 7 locales
 
 lua = runtime("en")
 lua.execute((ROOT / "tests/behavior.lua").read_text(encoding="utf-8"))
+lua.execute((ROOT / "tests/diagnostics.lua").read_text(encoding="utf-8"))
 
 # Verify public API symbols against the inspected upstream reference, when present.
 api_path = ROOT / ".reference/API.txt"

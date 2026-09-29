@@ -13,7 +13,14 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 
 ## Known incomplete behaviors
 
-General pursuit detection and native Heavy/Channel start/end/cancellation are not verified and are deliberately inactive. The Heavy/Channel setting retains its localized limitation tooltip. GCD now derives green readiness from actual LA-slot availability during the current GCD; the API does not explicitly identify an optimal weaving window. These limitations are not emulated with guessed durations. The user has tested the initial build in-game; the follow-up changes have automated validation and still require another in-game visual/behavior pass.
+General pursuit detection and native Heavy/Channel start/end/cancellation remain deliberately inactive. The Heavy/Channel setting retains its localized limitation tooltip. The user tested 0.1.1 in-game: GCD progress works, the ready bar never turns green, and Critical Health is correct. Which slot-1 gate fails is not yet known. The original ready predicate is retained pending observed evidence; 0.1.2 adds temporary diagnostics without claiming a green-state fix or guessing a timing threshold.
+
+## Current follow-up (0.1.2)
+
+- Centralized ResourceRing geometry: mean radius 32.5 -> 42.25 (+30%), equal horizontal/vertical radii instead of 36/29; stroke 2 -> 4, shield 4 -> 6, glow diameter 9 -> 11. Four separate bars, fill directions and Dot are preserved.
+- Temporary `/ocgcd on`, `off`, `summary`, and numeric page commands capture all readiness operands independently. No additional settings, SavedVariables fields, localization changes, events, or update registrations.
+- Existing 19 behavior scenarios pass (only intended geometry assertions updated), plus five temporary-probe tests. CriticalState and its behavior assertions are unchanged.
+- Next user action: follow `docs/GCD_DIAGNOSTICS.md` in ESO and return the summary plus representative pages before `/reloadui`; evidence is memory-only. Heavy/Channel remains unavailable.
 
 ## Follow-up: HUD corrections (0.1.1)
 

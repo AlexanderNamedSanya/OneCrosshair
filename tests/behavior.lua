@@ -167,14 +167,24 @@ test("critical glow spans empty HP without solid fill and removes immediately", 
     O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,0,false,.12)
     for _,point in ipairs(ring.arcs.health) do close(point.glow.color[4],0) end
 end)
-test("separate shallow bar geometry has small clear gaps and unchanged weight", function()
+test("larger circular bar geometry preserves gaps and aligns dependent layers", function()
     local ring = O.runtime.ring
     local a,b = ring.arcs.health[64].control,ring.arcs.stamina[64].control
     local distance = math.sqrt((a.anchor[4]-b.anchor[4])^2 + (a.anchor[5]-b.anchor[5])^2)
-    assert(distance > 6 and distance < 8)
+    assert(distance > 9 and distance < 11)
     local top = ring.arcs.health
-    assert(math.abs(top[1].control.anchor[5]-top[32].control.anchor[5]) < 6)
-    close(a.width,2); close(ring.arcs.shield[1].control.width,4)
+    assert(math.abs(top[1].control.anchor[5]-top[32].control.anchor[5]) < 9)
+    close(a.width,4); close(ring.arcs.shield[1].control.width,6)
+    close(top[1].glow.width,11)
+    close(math.abs(top[32].control.anchor[5]), math.abs(ring.arcs.stamina[32].control.anchor[4]))
+    close(math.abs(top[32].control.anchor[5]), 42.25 - 9 / 4096)
+    close(42.25 / ((36+29)/2),1.3)
+    for i=1,64 do
+        close(top[i].control.anchor[4],ring.arcs.shield[i].control.anchor[4])
+        close(top[i].control.anchor[5],ring.arcs.shield[i].control.anchor[5])
+        close(top[i].control.anchor[4],top[i].glow.anchor[4])
+        close(top[i].control.anchor[5],top[i].glow.anchor[5])
+    end
     close(O.PresetRegistry.Get("dot").elements[1].size,3)
 end)
 test("heavy overrides green with gray, cancel restores GCD in same frame", function()

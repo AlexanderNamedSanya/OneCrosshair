@@ -66,6 +66,11 @@ function GetSlotBoundId(slot) return T.ids[slot] or 0 end
 function IsSlotUsed(slot) return T.ids[slot] ~= nil and not T.emptyWeapon end
 function IsSlotUsable(slot) return T.weaponUsable == true end
 function ActionSlotHasNonCostStateFailure(slot) return T.weaponFailure == true end
+function GetSlotType(slot) return ACTION_TYPE_ABILITY end
+function GetActiveHotbarCategory() return 0 end
+SLASH_COMMANDS = {}
+T.chat = {}
+function d(message) T.chat[#T.chat + 1] = message end
 RETICLE = {control=control(), reticleTexture=control()}
 function RETICLE:UpdateHiddenState() self.reticleTexture:SetHidden(T.stealth or false) end
 function ZO_PostHook(object,key,fn)

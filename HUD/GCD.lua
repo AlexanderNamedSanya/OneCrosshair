@@ -2,8 +2,21 @@ local O = OneCrosshair
 O.GCD = { idleColor = { .8, .82, .85 }, readyColor = { .26, .88, .38 } }
 local LIGHT_ATTACK_SLOT = 1 -- physical Lua slot, unlike zero-based ACTION_BAR_* constants
 function O.GCD.New() return { active = false, progress = 0 } end
+local function ReadLightAttackState()
+    local state = { available = IsSlotUsed ~= nil and IsSlotUsable ~= nil
+        and ActionSlotHasNonCostStateFailure ~= nil and GetSlotCooldownInfo ~= nil }
+    -- Evaluate independently: short-circuiting hid which gates failed in-game.
+    if IsSlotUsed then state.used = IsSlotUsed(LIGHT_ATTACK_SLOT) end
+    if IsSlotUsable then state.usable = IsSlotUsable(LIGHT_ATTACK_SLOT) end
+    if ActionSlotHasNonCostStateFailure then state.failure = ActionSlotHasNonCostStateFailure(LIGHT_ATTACK_SLOT) end
+    if GetSlotCooldownInfo then
+        state.remaining, state.duration, state.global, state.globalSlotType = GetSlotCooldownInfo(LIGHT_ATTACK_SLOT)
+    end
+    return state
+end
 function O.GCD.Read(self)
     self.active, self.progress, self.ready = false, 0, false
+    self.remaining, self.duration, self.sourceSlot, self.la = 0, 0, nil, nil
     if not GetSlotCooldownInfo then return self end
     -- Ignore potion/item/individual cooldowns: the explicit global flag is required.
     -- Scan the active bar; a locally cooling slot may mask its global cooldown.
@@ -14,21 +27,26 @@ function O.GCD.Read(self)
         local abilityCooldown = globalSlotType == ACTION_TYPE_ABILITY or globalSlotType == ACTION_TYPE_CRAFTED_ABILITY
         if global and abilityCooldown and duration > 0 and remaining > bestRemaining then
             bestRemaining, bestDuration = remaining, duration
+            self.sourceSlot = slot
         end
     end
     if bestRemaining > 0 then
         self.active = true
+        self.remaining, self.duration = bestRemaining, bestDuration
         self.progress = O.Clamp(1 - bestRemaining / bestDuration)
     end
     -- Derived readiness, not an advertised server-side "optimal weave" event:
     -- a live ability GCD overlaps a currently usable, non-cooling light attack.
     -- No percentage, latency fudge or fixed-duration timer is involved.
-    if self.active and IsSlotUsed and IsSlotUsable and ActionSlotHasNonCostStateFailure
-        and IsSlotUsed(LIGHT_ATTACK_SLOT) and IsSlotUsable(LIGHT_ATTACK_SLOT)
-        and not ActionSlotHasNonCostStateFailure(LIGHT_ATTACK_SLOT) then
-        local remaining = GetSlotCooldownInfo(LIGHT_ATTACK_SLOT)
-        self.ready = remaining ~= nil and remaining <= 0
+    -- Keep the 0.1.1 conjunction until a real-client capture identifies its
+    -- failing gate. Independent reads are diagnostic, not a guessed fix.
+    if self.active then
+        self.la = ReadLightAttackState()
+        local la = self.la
+        self.ready = la.available and la.used and la.usable and not la.failure
+            and la.remaining ~= nil and la.remaining <= 0 or false
     end
+    O.GCDDiagnostics.Capture(self)
     return self
 end
 function O.GCD.Presentation(self)
