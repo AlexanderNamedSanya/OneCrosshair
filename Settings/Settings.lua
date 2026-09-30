@@ -55,6 +55,7 @@ function O.Settings.Initialize(s)
         local key = item[1]
         add({ type = "slider", name = text(item[2]), min = 0, max = 100, step = 1,
             getFunc = function() return s[key] * 100 end,
+            disabled = function() return key == "crosshairOpacity" and O.PresetRegistry.Get(s.preset).native == true end,
             setFunc = function(value) s[key] = value / 100; O.Preview.Refresh() end })
     end
     header("HUD")

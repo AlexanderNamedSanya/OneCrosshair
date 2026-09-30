@@ -11,7 +11,13 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 - Automatic isolated three-state settings preview and reversible vanilla decorative-reticle hiding.
 - Lua 5.1 mock contract suite, engine-symbol checks against inspected documentation, deterministic DDS generation.
 
-## Current release: 0.1.7
+## Current release: 0.1.8
+
+Added Rays and Diamonds from the two user-supplied reference images, plus ESO Default which restores the actual game reticle. Existing Dot selection/default is preserved. The four presets are selected through the existing dropdown and appear in the existing three-state preview with bars. Custom variants retain animation/feedback; native ESO retains the game's behavior and disables custom crosshair opacity. Four small generated DDS assets are shipped; ESO art is referenced from the client, not copied.
+
+Validation: 80 Lua 5.1 behavior scenarios, seven locale/manifest checks and engine symbol checks pass. New tests cover selection, state transitions, pooled UV reset, native/custom ownership switching, stealth/menu/deactivation and preview isolation. The custom silhouettes were visually inspected through offline rendering of their actual Lua/DDS output. ESO native art/behavior was checked against upstream reticle.xml/reticle.lua; final client rendering still needs `/reloadui` verification. No resource/GCD/Heavy timing changes in this release.
+
+## Previous release: 0.1.7
 
 The latest user request replaces Critical State entirely with Low Resource Warning for all three resources. The warning covers the whole attribute arc and extends outward by two stroke widths; no side dimming remains. Heavy/cast/channel belongs to the GCD switch, and legacy saved options are retired. Three temporary resource geometry sliders and enabled bars in all three preview examples are implemented.
 

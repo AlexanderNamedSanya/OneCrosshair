@@ -16,6 +16,7 @@ T = { now = 0, latency = 100, target = false, interact = false, block = false, c
       camera = true, menu = false, reticleHidden = false, dead = false, powers = {100,100,[4]=100},
       maxHealth = 100, shield = 0, cooldowns = {}, ids = {[1]=101,[2]=102,[3]=103} }
 local methods = {}
+function methods:SetTextureCoords(...) self.textureCoords = {...} end
 function methods:SetTexture(v) self.texture = v end
 function methods:SetDimensions(w,h) self.width, self.height = w,h end
 function methods:SetHidden(v) self.hidden = v end

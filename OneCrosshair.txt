@@ -1,7 +1,7 @@
 ## Title: OneCrosshair
 ## Description: Contextual crosshair and configurable resource ring.
 ## Author: OneCrosshair
-## Version: 0.1.7
+## Version: 0.1.8
 ## APIVersion: 101051
 ## SavedVariables: OneCrosshairSavedVariables
 ## DependsOn: LibAddonMenu-2.0
@@ -15,6 +15,9 @@ Core/VisibilityController.lua
 Core/ReticleReplacement.lua
 Crosshair/PresetRegistry.lua
 Crosshair/Presets/Dot.lua
+Crosshair/Presets/Rays.lua
+Crosshair/Presets/Diamonds.lua
+Crosshair/Presets/ESO.lua
 Crosshair/CrosshairController.lua
 HUD/ResourceRing.lua
 HUD/Resource.lua

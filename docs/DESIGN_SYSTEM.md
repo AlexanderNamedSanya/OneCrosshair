@@ -13,3 +13,14 @@ Two independently centered layers: preset crosshair and resource ring. Geometry 
 - Settings preview: three isolated white Normal/Target/Block crosshairs plus enabled bars and shield. Static examples use HP 20%, MP 65%, Stamina 80%, shield 10%, bottom 60%; low HP demonstrates the warning. Toggles, opacity and geometry refresh immediately. Large rings scale down to fit each preview cell; live geometry remains exact. DYNAMIC/COMBAT_ONLY previews illustrate enabled bars without reading gameplay; OFF hides them.
 
 Dimensions are ESO UI units and follow game UI scaling. Offline rendering and mocked control tests do not replace an in-game visual check.
+
+## Crosshair presets (0.1.8)
+
+| Preset | Normal | Target | Block |
+| --- | --- | --- | --- |
+| Dot (existing default) | One dot | Three upright dots | Three inverted dots |
+| Rays / Лучи | Three radial strokes | Three open upright triangle corners | Three inverted triangle corners |
+| Diamonds / Ромбы | One diamond | Three upright diamonds | Three inverted diamonds |
+| ESO Default / Стандартный ESO | Actual native ESO reticle | Native targeting animation | No addon-specific Block shape |
+
+Rays follows the first supplied screenshot, with 1.2-unit strokes and a 20-unit envelope inside a transparent 32-unit control; state silhouettes crossfade over 250 ms. Diamonds follows the second screenshot with 5-unit texture controls, Target coordinates (0,-8),(-7,3),(7,3), Block (0,4),(-5,-3.5),(5,-3.5). These use the existing custom combat color and feedback rules. Native ESO preserves the game's appearance, opacity, hit feedback and stealth behavior; only this preset disables the custom-opacity slider. All presets remain compatible with the enabled resource-ring preview. New DDS assets are generated deterministically from geometric primitives; screenshots are references, not extracted bitmap assets.

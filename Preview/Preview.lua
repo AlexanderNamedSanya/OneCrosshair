@@ -29,7 +29,7 @@ function O.Preview.Refresh()
     for _, example in ipairs(self.examples) do
         O.CrosshairController.SetPreset(example.crosshair, s.preset, example.state)
         O.CrosshairController.Update(example.crosshair, { geometry = example.state },
-            s.crosshairOpacity, GetFrameTimeMilliseconds(), true)
+            example.crosshair.preset.native and 1 or s.crosshairOpacity, GetFrameTimeMilliseconds(), true)
         local ring = example.ring
         O.ResourceRing.Configure(ring, s)
         -- Large experimental dimensions fit the preview cell without changing

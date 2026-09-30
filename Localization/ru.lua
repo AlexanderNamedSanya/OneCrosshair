@@ -1,4 +1,5 @@
 local strings = {
+    PRESET_RAYS = "Лучи", PRESET_DIAMONDS = "Ромбы", PRESET_ESO = "Стандартный ESO",
     PRESET_DOT = "Точка", NORMAL = "Обычный", TARGET = "Цель", BLOCK = "Блок",
     CROSSHAIR = "Прицел", PRESET = "Пресет", APPEARANCE = "Внешний вид",
     CROSSHAIR_OPACITY = "Непрозрачность прицела", HUD_OPACITY = "Непрозрачность HUD", HUD = "HUD",

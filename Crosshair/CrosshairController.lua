@@ -16,6 +16,8 @@ function O.CrosshairController.SetPreset(self, id, state)
         self.pool[i] = c
         c:SetHidden(false)
         c:SetTexture(definition.texture or "OneCrosshair/Assets/Disc.dds")
+        local uv = definition.textureCoords or { 0, 1, 0, 1 }
+        c:SetTextureCoords(uv[1], uv[2], uv[3], uv[4])
         c:SetDimensions(definition.width or definition.size or 3, definition.height or definition.size or 3)
         local p = preset.states[state or "normal"][i] or {}
         self.elements[i] = { control = c, x = A.New(p.x or 0), y = A.New(p.y or 0),

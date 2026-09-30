@@ -28,7 +28,7 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 
 ## Preset contract
 
-A preset registers `id`, a String ID `name`, `elements`, and `states.normal/target/block`. Each element can specify its own `texture`, `width/height` or `size`. Each state contains per-element `x`, `y`, `alpha`, `rotation`. Stable element indices preserve identity during movement. An absent state element fades out. The renderer imposes no element-count limit; textures can contain lines/arcs or other shapes. Dot uses three stable elements, with two fading out only as they converge in Normal to avoid opacity accumulation.
+A preset registers `id`, a String ID `name`, `elements`, and `states.normal/target/block`. Each element can specify its own `texture`, `textureCoords` (left/right/top/bottom atlas UVs), `width/height` or `size`. Each state contains per-element `x`, `y`, `alpha`, `rotation`. Stable element indices preserve identity during movement. An absent state element fades out. The renderer imposes no element-count limit; textures can contain lines/arcs or other shapes. Dot uses three stable elements, with two fading out only as they converge in Normal to avoid opacity accumulation.
 
 An optional pure presentation function `combatFeedback(index, x, y, pulse)` returns displaced coordinates. Without it the crosshair root pulses scale. Presets must not call gameplay APIs. To add a preset, add its file to the manifest, register it, and localize its name. Settings enumerate the registry; resources, state detection, GCD and preview logic require no edits.
 
@@ -54,3 +54,11 @@ GCD's active-bar cooldown selection and center-out progress are unchanged. HUD/G
 
 
 Version 0.1.6 removes the temporary diagnostic module, capture calls, slash command, history and debug-only source/reason/serial snapshots. The single runtime update and all remaining Heavy/Channel listeners serve gameplay. No debug chat output is shipped. Heavy full-release events may retain the owner only until its one completion frame; a subsequent accepted attack replaces it normally.
+
+## Presets added in 0.1.8
+
+Rays uses three original whole-state textures and the existing 250 ms alpha interpolation to crossfade the screenshot silhouettes. Diamonds uses three moving diamond textures with Dot-style feedback, preserving the single visible Normal element. Dot and saved preset IDs remain unchanged. Texture coordinates are set on every preset change, including full-UV reset when leaving an atlas preset, so pooled controls cannot retain a cropped sprite.
+
+The ESO preset has `native = true`. Runtime releases decorative-reticle replacement and hides only its custom crosshair root, leaving the resource ring active. ESO owns its appearance, targeting animation, impactful-hit feedback and stealth/disguise visibility. This mode does not apply OneCrosshair opacity/color/feedback to the native control; the crosshair-opacity slider is disabled. Switching back reacquires replacement normally. No native API/method is overridden.
+
+The isolated ESO preview uses the first and last cells of the game's 16-cell `EsoUI/Art/Reticle/reticleAnim.dds`, at its native 64x64 control size. Block has no separate vanilla shape, so its preview shows the normal endpoint. The preview does not change the live reticle. Sources: [reticle.xml](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.xml), [reticle.lua](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.lua).

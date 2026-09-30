@@ -36,7 +36,9 @@ function O.Runtime.Update(self)
         and not IsReticleHidden() and not IsUnitDead("player")
         and (not RETICLE or not RETICLE.control:IsHidden())
     self.root:SetHidden(not visible)
-    O.ReticleReplacement.SetActive(visible)
+    local native = O.PresetRegistry.Get(s.preset).native == true
+    O.ReticleReplacement.SetActive(visible and not native)
+    self.crosshair.root:SetHidden(native)
     if not visible then
         O.HeavyChannel.Read(s.gcd, now, false) -- expire without a hidden completion frame
         self.gcd = O.GCD.New()
