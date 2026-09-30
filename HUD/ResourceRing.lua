@@ -42,8 +42,8 @@ function R.New(parent)
     return self
 end
 function R.Configure(self, settings)
-    local radius, thickness, length = settings.resourceRadius or 42.25,
-        settings.resourceThickness or 4, settings.resourceLength or 85
+    local radius, thickness, length = settings.resourceRadius or O.Config.resourceRadius,
+        settings.resourceThickness or O.Config.resourceThickness, settings.resourceLength or O.Config.resourceLength
     if self.radius == radius and self.thickness == thickness and self.length == length then return end
     self.radius, self.thickness, self.length = radius, thickness, length
     self.root:SetDimensions(2 * (radius + 2.5 * thickness), 2 * (radius + 2.5 * thickness))

@@ -25,6 +25,7 @@ function methods:SetAnchor(...) self.anchor = {...}; self.anchors = self.anchors
 function methods:ClearAnchors() self.anchor = nil; self.anchors = {} end
 function methods:SetPixelRoundingEnabled(v) self.rounding = v end
 function methods:SetThickness(v) self.thickness = v end
+function methods:GetColor() return unpack(self.color or {1,1,1,1}) end
 function methods:SetColor(...) self.color = {...} end
 function methods:SetAlpha(v) self.alpha = v end
 function methods:SetScale(v) self.scale = v end
@@ -138,4 +139,10 @@ function GetSpecificSkillAbilityInfo(kind,line,skill,morph,rank)
 end
 function GetProgressionSkillMorphSlotChainedAbilityIds(progression,morph)
     return unpack(T.chained and T.chained[morph] or {})
+end
+
+RETICLE.hitIndicatorTimeline = { Stop = function(self) self.playing = false end }
+function RETICLE:OnImpactfulHit()
+    self.hitIndicatorTimeline.playing = true
+    self.reticleTexture:SetColor(1,0,0,1)
 end

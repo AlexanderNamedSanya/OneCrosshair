@@ -1,37 +1,43 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four configurable resource arcs. Version 0.1.11 targets the inspected ESO UI API **101051**.
+**Version 1.0 — oneDOK** · ESO UI API **101051**
+
+Animated crosshair presets with a contextual resource ring and a Light Attack weaving cue.
 
 ## Installation
 
-1. Install **LibAddonMenu-2.0** and its declared dependencies using your addon manager.
-2. Copy this folder as `OneCrosshair` into your ESO `live/AddOns` directory. `OneCrosshair.txt` must be directly inside it, not inside another nested folder.
-3. Enable the addon and reload the UI. Open Settings → Addons → OneCrosshair. Three white preset examples and enabled HUD bars appear automatically.
+1. Install LibAddonMenu-2.0 and its dependencies separately.
+2. Extract `OneCrosshair-1.0.zip` into your ESO `live/AddOns` directory. The result must be `AddOns/OneCrosshair/OneCrosshair.txt`.
+3. Run `/reloadui`, enable the addon and open Settings → Addons → OneCrosshair.
 
-Runtime files are the manifest, Lua modules, and `Assets/*.dds`. `tests`, `tools`, and `docs` are development material; `.reference` is ignored research/test tooling and should not be distributed.
+## Features
 
-## Available
+- Five presets: Dot, Large Dots, Rays, Diamonds and ESO Default.
+- Smooth Normal/Target/Block transitions. Rays unfold into corners and rearrange when blocking.
+- White outside combat, red in combat, including the native ESO preset. Native targeting and stealth behavior remain; the hit-color timeline is suppressed while the addon owns native color so it cannot overwrite the combat tint.
+- Health, Magicka, Stamina, shield and a center-out bottom timing bar; configurable feature toggles and visibility modes.
+- Full-arc outward warnings for low resources.
+- GCD and finite cast/channel weaving cues, plus Heavy Attack progress.
+- English/Russian localization, account-wide settings and isolated three-state previews with bars.
 
-Dot, Rays and Diamonds with animated Normal/Target/Block states; an ESO Default mode using the native game reticle; combat red and normal white; independent configurable Health/Magicka/Stamina arcs; overlaid shield; API-driven GCD progress; dynamic/combat/always/off visibility; whole-arc outward low-resource warnings for HP/MP/Stamina; conservative direct-action feedback; account-wide settings; English/Russian localization; reversible vanilla reticle replacement preserving prompts and stealth UI.
+## Fixed release appearance
 
-Preset selection is under Settings → Addons → OneCrosshair → Preset. Rays and Diamonds reproduce the supplied visual references. Rays unfold into corners on target acquisition and rearrange into an inverted triangle on Block; custom transitions take 250 ms and continue smoothly when interrupted. ESO Default keeps the game's own animation, hit feedback and stealth behavior; its crosshair opacity is controlled by ESO, so the addon slider is disabled. Resource bars remain available with every preset.
+The five appearance sliders remain visible but locked. Edit the commented values in `Core/Config.lua`, then `/reloadui`:
 
-## Explicit API limitations
+| Value | Release setting |
+| --- | --- |
+| Arc length | 90% |
+| Ring radius | 45.25 UI units |
+| Line thickness | 5 UI units |
+| Custom crosshair opacity | 65% |
+| Resource/HUD opacity | 50% |
 
-- **Pursuit yellow**: no reliable general pursuit state was verified; the renderer supports yellow but the detector does not guess it from hostile targets or combat.
-- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md). Normal GCD/weaving is confirmed working in-game.
-- **Heavy/Channel progress**: enabled through the GCD setting; event-derived finite charge/cast/channel progress temporarily owns the bottom bar. Cast/channel uses the client-derived timing table and cues LA in the last capped-ping interval, gated by any remaining GCD. Full Heavy completion shows one green frame; cancellation and cast/channel completion restore current GCD/idle without an added hold. Uses narrow CombatMetronome mechanisms without a dependency. [Algorithm, exceptions and limitations](docs/HEAVY_CHANNEL_REFERENCE.md); the user confirmed start/progress/completion, early Heavy release, Block/Dodge cancellation and ownership restoration in ESO.
-- **Combat feedback**: a direct damage result must match recent player action evidence. Periodic results, incoming damage, uncorrelated procs and healing do not trigger it. Abilities with differing slot/impact IDs may be intentionally missed; delayed impacts after 1.5 s are ignored. This evidence window is not a GCD timer.
+These code values override old saved appearance settings on load. Preset, visibility and feature choices remain configurable. Native ESO keeps its own alpha. Dot is 3 UI units in diameter; Large Dots is 15. Dot spacing is 25% wider than in 0.1.11.
 
-See [API research](docs/API_RESEARCH.md) for sources and the required client test matrix. This repository was checked with a mocked ESO environment running real Lua 5.1; the accepted runtime behavior is documented in [project context](docs/PROJECT_CONTEXT.md). The 0.1.7 geometry and early cast/channel cue should be checked in-game after reload. See [0.1.7 changes](docs/UPDATE_0_1_7.md).
+## Timing limitations
 
-## Development checks
+The green next-LA cue is a latency heuristic: the remaining GCD, and any active finite cast/channel, must be within `min(ping,150 ms)`. It is not a guaranteed engine input window. Unknown or indefinite cast durations do not fabricate progress. Full Heavy completion retains its approved one green update; early cancellation does not. Timing research is in `docs/WEAVING_REFERENCE.md` and `docs/HEAVY_CHANNEL_REFERENCE.md`. CombatMetronome is not a dependency.
 
-Install Python packages `lupa` and `Pillow` in your development environment, then run:
+## Development
 
-```text
-python tests/run.py
-python tools/generate_assets.py
-```
-
-The first command checks manifest order, initialization, localization, behavior and (when `.reference/API.txt` exists) referenced engine symbols. The second regenerates the original DDS textures. Tests are contracts, not a substitute for running ESO.
+`python tests/run.py` runs Lua 5.1 contract tests (requires lupa). `python tools/package_release.py` creates and verifies the runtime-only ZIP and SHA-256 file in `dist`. Development/reference folders, SavedVariables and third-party addons are excluded. `tools/deploy.ps1` installs runtime files and checks hashes. Mock tests do not replace final in-game verification.

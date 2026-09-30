@@ -2,7 +2,7 @@
 
 ## Composition and load order
 
-The manifest loads default String IDs, the selected locale, namespace, core services, registry/presets, rendering/HUD/effects, preview/settings, runtime, then the thin `OneCrosshair.lua` entry point. The entry point handles `EVENT_ADD_ON_LOADED`, opens account-wide SavedVariables and composes settings/runtime. No module requires or calls back into initialization.
+The manifest loads default String IDs, the selected locale, namespace, fixed release config, core services, registry/presets, rendering/HUD/effects, preview/settings, runtime, then the thin `OneCrosshair.lua` entry point. The entry point handles `EVENT_ADD_ON_LOADED`, opens account-wide SavedVariables and composes settings/runtime. No module requires or calls back into initialization.
 
 `Core/Runtime.lua` coordinates one 16 ms update subscription and activation/deactivation events. Camera/UI/death/reticle visibility gates the whole gameplay overlay. Independent settings preview instances live under the settings panel. No gameplay code contains localized strings.
 
@@ -48,7 +48,7 @@ Controls are pooled across preset changes; ring controls are allocated once. Arc
 
 ## Geometry and timing ownership
 
-ResourceRing owns validated settings for radius (20..100), thickness (1..12) and quarter-circle arc length (0..100%). Defaults are 42.25, 4 and 85%. Zero hides the ring root including shield and glow; 100 joins all four endpoints into a circle. Each quadrant has 64 line segments. Eight fading bands span the full attribute outward from its solid edge by twice its thickness; warning opacity is independent of resource fill. Shield retains a coincident centerline with two extra thickness units. Preview uses separate ring instances, static sample values and size-to-fit for unusually large dimensions.
+Core/Config.lua owns fixed release radius 45.25, thickness 5, quarter-circle arc length 90%, custom crosshair opacity .65 and HUD opacity .50. Settings.Load overwrites legacy saved appearance values with these constants; all five UI setters are no-ops and sliders are disabled. ResourceRing uses the same config as its initialization fallback. Zero hides the ring root including shield and glow; 100 joins all four endpoints into a circle. Each quadrant has 64 line segments. Eight fading bands span the full attribute outward from its solid edge by twice its thickness; warning opacity is independent of resource fill. Shield retains a coincident centerline with two extra thickness units. Preview uses separate ring instances, static sample values and size-to-fit for unusually large dimensions.
 
 GCD's active-bar cooldown selection and center-out progress are unchanged. HUD/GCD.lua owns the ping-zone threshold and cue latch; OneCrosshair.lua remains composition only. A rising cooldown or a prior sample whose remaining time elapsed identifies a new observed cycle, even without a zero frame. Hidden/deactivated gameplay clears the model through Runtime. The former slot-1 diagnostic reads and cycle counter are removed. No LA hit, weapon table, queue, additional event handler or update registration is required.
 
@@ -59,7 +59,7 @@ Version 0.1.6 removes the temporary diagnostic module, capture calls, slash comm
 
 Rays now uses six persistent native line controls (0.1.10), with animated start/end coordinates. Each paired set unfolds from one spoke into a corner; Block relocates the three corners into an inverted triangle. Diamonds uses three moving diamond textures with Dot-style feedback, preserving the single visible Normal element. Dot and saved preset IDs remain unchanged. Texture coordinates are set on every preset change, including full-UV reset when leaving an atlas preset, so pooled controls cannot retain a cropped sprite.
 
-The ESO preset has `native = true`. Runtime releases decorative-reticle replacement and hides only its custom crosshair root, leaving the resource ring active. ESO owns its appearance, targeting animation, impactful-hit feedback and stealth/disguise visibility. This mode does not apply OneCrosshair opacity/color/feedback to the native control; the crosshair-opacity slider is disabled. Switching back reacquires replacement normally. No native API/method is overridden.
+The ESO preset has `native = true`. Runtime releases decorative-reticle replacement and hides only its custom crosshair root, leaving the resource ring active. ESO owns its targeting animation and stealth/disguise visibility; the release combat-color layer is described below. In 1.0, NativeReticleColor applies the same 100 ms combat red/peace white transition while preserving native alpha. It snapshots/restores the original RGBA on ownership transitions and stops the native hit-color timeline while active, including through a guarded post-hook on OnImpactfulHit. Menu/death/hidden/deactivation/preset changes release ownership. No new custom hit flash is added. Switching back reacquires replacement normally. No native API/method is overridden.
 
 The isolated ESO preview uses the first and last cells of the game's 16-cell `EsoUI/Art/Reticle/reticleAnim.dds`, at its native 64x64 control size. Block has no separate vanilla shape, so its preview shows the normal endpoint. The preview does not change the live reticle. Sources: [reticle.xml](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.xml), [reticle.lua](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.lua).
 
@@ -74,3 +74,7 @@ Rays interpolates both endpoints over the existing 250 ms smoothstep. Normal has
 ## Large Dots (0.1.11)
 
 `large_dot` is an independent preset reusing Disc.dds and the existing three-element animation/feedback contract. Its 15-unit design dots render at 30 UI units with the existing 2x root scale: five times the current Dot diameter. Target/Block spacing is increased to keep the larger dots separate. Existing Dot/default and other presets are unchanged.
+
+## Release 1.0
+
+Author metadata is oneDOK in both manifest and addon panel. Dot design size is 1.5 (rendered 3) with 25% wider state coordinates; Large Dots design size is 7.5 (rendered 15), with existing spacing. Both retain shared animation. Package generation follows manifest entries plus original DDS assets, verifies archive contents, and emits SHA-256; no reference, tooling or saved user data is distributed.

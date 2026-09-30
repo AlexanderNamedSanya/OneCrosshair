@@ -13,6 +13,7 @@ function O.Runtime.New(settings)
     self.crosshair.root:SetAnchor(CENTER, self.root, CENTER, 0, 0)
     self.ring = O.ResourceRing.New(self.root)
     O.ReticleReplacement.Initialize()
+    O.NativeReticleColor.Initialize()
     O.CombatFeedback.Initialize(settings, self.crosshair)
     O.AbilityTimings.Initialize()
     O.HeavyChannel.Initialize(settings)
@@ -25,6 +26,7 @@ function O.Runtime.New(settings)
         self.gcd = O.GCD.New()
         self.root:SetHidden(true)
         O.ReticleReplacement.SetActive(false)
+        O.NativeReticleColor.Update(false)
     end)
     -- RegisterForUpdate keeps running while our top-level window is hidden.
     EVENT_MANAGER:RegisterForUpdate(O.name, 16, function() O.Runtime.Update(self) end)
@@ -39,6 +41,7 @@ function O.Runtime.Update(self)
     local native = O.PresetRegistry.Get(s.preset).native == true
     O.ReticleReplacement.SetActive(visible and not native)
     self.crosshair.root:SetHidden(native)
+    O.NativeReticleColor.Update(visible and native, native and IsUnitInCombat("player"), now)
     if not visible then
         O.HeavyChannel.Read(s.gcd, now, false) -- expire without a hidden completion frame
         self.gcd = O.GCD.New()

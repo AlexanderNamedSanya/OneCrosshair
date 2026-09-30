@@ -1,17 +1,19 @@
 local O = OneCrosshair
 O.Settings = {}
 O.Settings.defaults = {
-    preset = "dot", crosshairOpacity = 1, hudOpacity = .85,
+    preset = "dot", crosshairOpacity = O.Config.crosshairOpacity, hudOpacity = O.Config.hudOpacity,
     resources = true, gcd = true, visibility = "DYNAMIC",
     lowResource = true, shield = true,
     combatFeedback = true,
-    resourceThickness = 4, resourceLength = 85, resourceRadius = 42.25,
+    resourceThickness = O.Config.resourceThickness, resourceLength = O.Config.resourceLength, resourceRadius = O.Config.resourceRadius,
 }
 function O.Settings.Load()
     local s = ZO_SavedVars:NewAccountWide("OneCrosshairSavedVariables", 1, nil, O.Settings.defaults)
     for key, default in pairs(O.Settings.defaults) do
         if type(s[key]) ~= type(default) then s[key] = default end
     end
+    -- Release appearance is code-owned, independent of old account settings.
+    for key, value in pairs(O.Config) do s[key] = value end
     s.criticalState, s.heavyChannel = nil, nil -- retired options; GCD is authoritative
     for key, bounds in pairs({ resourceThickness = {1,12}, resourceLength = {0,100}, resourceRadius = {20,100} }) do
         if s[key] ~= s[key] then s[key] = O.Settings.defaults[key] end
@@ -29,7 +31,7 @@ function O.Settings.Initialize(s)
     if not LAM then return end -- manifest dependency normally prevents this case
     local function text(key) return GetString(_G["SI_ONECROSSHAIR_" .. key]) end
     local panel = LAM:RegisterAddonPanel(O.name .. "Settings", {
-        type = "panel", name = "OneCrosshair", displayName = "OneCrosshair", author = "OneCrosshair",
+        type = "panel", name = "OneCrosshair", displayName = "OneCrosshair", author = O.author,
         version = O.version, registerForRefresh = true, registerForDefaults = false,
     })
     local options = {}
@@ -55,8 +57,8 @@ function O.Settings.Initialize(s)
         local key = item[1]
         add({ type = "slider", name = text(item[2]), min = 0, max = 100, step = 1,
             getFunc = function() return s[key] * 100 end,
-            disabled = function() return key == "crosshairOpacity" and O.PresetRegistry.Get(s.preset).native == true end,
-            setFunc = function(value) s[key] = value / 100; O.Preview.Refresh() end })
+            disabled = function() return true end, tooltip = text("LOCKED_APPEARANCE"),
+            setFunc = function() end })
     end
     header("HUD")
     checkbox("resources", "RESOURCES")
@@ -70,8 +72,8 @@ function O.Settings.Initialize(s)
         {"resourceLength", "RESOURCE_LENGTH", 0, 100, 1}, {"resourceRadius", "RESOURCE_RADIUS", 20, 100, .25} }) do
         local key = item[1]
         add({ type = "slider", name = text(item[2]), min = item[3], max = item[4], step = item[5],
-            getFunc = function() return s[key] end,
-            setFunc = function(value) s[key] = value; O.Preview.Refresh() end })
+            getFunc = function() return s[key] end, disabled = function() return true end,
+            tooltip = text("LOCKED_APPEARANCE"), setFunc = function() end })
     end
     header("EFFECTS")
     checkbox("lowResource", "LOW_RESOURCE")

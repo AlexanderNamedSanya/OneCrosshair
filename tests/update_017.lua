@@ -107,20 +107,21 @@ test("preview rings obey switches, opacity, geometry, and stay isolated from gam
     s.resources=true; s.visibility="OFF"; O.Preview.Refresh(); close(ring.arcs.health.alpha,0)
     s.visibility="ALWAYS"; s.resourceLength=0; O.Preview.Refresh(); assert(ring.root.hidden)
 end)
-test("saved settings retire old switches and clamp invalid experimental geometry", function()
+test("saved settings retire old switches and apply locked release appearance", function()
     local old=ZO_SavedVars.NewAccountWide
     ZO_SavedVars.NewAccountWide=function() return {gcd=false,heavyChannel=true,criticalState=true,
         resourceThickness=99,resourceLength=-10,resourceRadius=0/0} end
     local s=O.Settings.Load()
     ZO_SavedVars.NewAccountWide=old
     assert(s.criticalState==nil and s.heavyChannel==nil and not s.gcd)
-    close(s.resourceThickness,12); close(s.resourceLength,0); close(s.resourceRadius,42.25)
+    close(s.resourceThickness,5); close(s.resourceLength,90); close(s.resourceRadius,45.25)
 end)
-test("geometry and feature controls immediately refresh preview", function()
+test("geometry controls stay locked while feature controls refresh preview", function()
     local found=0
     for _,option in ipairs(LibAddonMenu2.options) do
         if option.name==GetString(SI_ONECROSSHAIR_RESOURCE_LENGTH) then
-            option.setFunc(85); close(O.Preview.examples[1].ring.length,85); found=found+1
+            local before=O.Preview.examples[1].ring.length
+            assert(option.disabled()); option.setFunc(85); close(O.Preview.examples[1].ring.length,before); found=found+1
         elseif option.name==GetString(SI_ONECROSSHAIR_GCD) then
             option.setFunc(true); assert(O.Preview.examples[1].ring.arcs.bottom.alpha>0); found=found+1
         end

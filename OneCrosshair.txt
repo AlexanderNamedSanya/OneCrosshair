@@ -1,7 +1,7 @@
 ## Title: OneCrosshair
-## Description: Contextual crosshair and configurable resource ring.
-## Author: OneCrosshair
-## Version: 0.1.11
+## Description: Animated crosshair presets with contextual resource and weaving indicators.
+## Author: oneDOK
+## Version: 1.0
 ## APIVersion: 101051
 ## SavedVariables: OneCrosshairSavedVariables
 ## DependsOn: LibAddonMenu-2.0
@@ -9,10 +9,12 @@
 Localization/en.lua
 Localization/$(language).lua
 Core/Namespace.lua
+Core/Config.lua
 Core/Animator.lua
 Core/StateController.lua
 Core/VisibilityController.lua
 Core/ReticleReplacement.lua
+Core/NativeReticleColor.lua
 Crosshair/PresetRegistry.lua
 Crosshair/Presets/Dot.lua
 Crosshair/Presets/LargeDot.lua

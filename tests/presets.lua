@@ -87,7 +87,7 @@ test("native preview has full opacity and does not change the live reticle", fun
     for _,e in ipairs(O.Preview.examples) do close(e.crosshair.root.alpha,1) end
     for _,option in ipairs(LibAddonMenu2.options) do
         if option.name==GetString(SI_ONECROSSHAIR_CROSSHAIR_OPACITY) then
-            assert(option.disabled()); O.settings.preset="rays"; assert(not option.disabled())
+            assert(option.disabled()); O.settings.preset="rays"; assert(option.disabled())
         end
     end
     O.Preview.Refresh()

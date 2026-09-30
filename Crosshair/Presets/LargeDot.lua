@@ -1,7 +1,7 @@
 local O = OneCrosshair
 O.PresetRegistry.Register({
     id = "large_dot", name = SI_ONECROSSHAIR_PRESET_LARGE_DOT,
-    elements = { { size = 15 }, { size = 15 }, { size = 15 } },
+    elements = { { size = 7.5 }, { size = 7.5 }, { size = 7.5 } },
     states = {
         normal = { { x = 0, y = 0 }, { x = 0, y = 0, alpha = 0 }, { x = 0, y = 0, alpha = 0 } },
         target = { { x = 0, y = -10 }, { x = -9, y = 6 }, { x = 9, y = 6 } },
