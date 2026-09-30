@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four configurable resource arcs. Version 0.1.9 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four configurable resource arcs. Version 0.1.10 targets the inspected ESO UI API **101051**.
 
 ## Installation
 
@@ -14,7 +14,7 @@ Runtime files are the manifest, Lua modules, and `Assets/*.dds`. `tests`, `tools
 
 Dot, Rays and Diamonds with animated Normal/Target/Block states; an ESO Default mode using the native game reticle; combat red and normal white; independent configurable Health/Magicka/Stamina arcs; overlaid shield; API-driven GCD progress; dynamic/combat/always/off visibility; whole-arc outward low-resource warnings for HP/MP/Stamina; conservative direct-action feedback; account-wide settings; English/Russian localization; reversible vanilla reticle replacement preserving prompts and stealth UI.
 
-Preset selection is under Settings → Addons → OneCrosshair → Preset. Rays and Diamonds reproduce the supplied visual references. ESO Default keeps the game's own animation, hit feedback and stealth behavior; its crosshair opacity is controlled by ESO, so the addon slider is disabled. Resource bars remain available with every preset.
+Preset selection is under Settings → Addons → OneCrosshair → Preset. Rays and Diamonds reproduce the supplied visual references. Rays unfold into corners on target acquisition and rearrange into an inverted triangle on Block; custom transitions take 250 ms and continue smoothly when interrupted. ESO Default keeps the game's own animation, hit feedback and stealth behavior; its crosshair opacity is controlled by ESO, so the addon slider is disabled. Resource bars remain available with every preset.
 
 ## Explicit API limitations
 

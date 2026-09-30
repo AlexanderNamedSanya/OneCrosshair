@@ -28,7 +28,7 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 
 ## Preset contract
 
-A preset registers `id`, a String ID `name`, `elements`, and `states.normal/target/block`. Each element can specify its own `texture`, `textureCoords` (left/right/top/bottom atlas UVs), `width/height` or `size`. Each state contains per-element `x`, `y`, `alpha`, `rotation`. Stable element indices preserve identity during movement. An absent state element fades out. The renderer imposes no element-count limit; textures can contain lines/arcs or other shapes. Dot uses three stable elements, with two fading out only as they converge in Normal to avoid opacity accumulation.
+A preset registers `id`, a String ID `name`, `elements`, and `states.normal/target/block`. Each element can specify its own `texture`, `textureCoords` (left/right/top/bottom atlas UVs), `width/height` or `size`. Each state contains per-element `x`, `y`, `alpha`, `rotation`. Line elements specify `kind = "line"` and `thickness`; their states use `x/y/x2/y2/alpha`. Texture and line controls have separate reusable pools. Stable element indices preserve identity during movement. An absent state element fades out. The renderer imposes no element-count limit; textures can contain lines/arcs or other shapes. Dot uses three stable elements, with two fading out only as they converge in Normal to avoid opacity accumulation.
 
 An optional pure presentation function `combatFeedback(index, x, y, pulse)` returns displaced coordinates. Without it the crosshair root pulses scale. Presets must not call gameplay APIs. To add a preset, add its file to the manifest, register it, and localize its name. Settings enumerate the registry; resources, state detection, GCD and preview logic require no edits.
 
@@ -57,7 +57,7 @@ Version 0.1.6 removes the temporary diagnostic module, capture calls, slash comm
 
 ## Presets added in 0.1.8
 
-Rays uses three original whole-state textures and the existing 250 ms alpha interpolation to crossfade the screenshot silhouettes. Diamonds uses three moving diamond textures with Dot-style feedback, preserving the single visible Normal element. Dot and saved preset IDs remain unchanged. Texture coordinates are set on every preset change, including full-UV reset when leaving an atlas preset, so pooled controls cannot retain a cropped sprite.
+Rays now uses six persistent native line controls (0.1.10), with animated start/end coordinates. Each paired set unfolds from one spoke into a corner; Block relocates the three corners into an inverted triangle. Diamonds uses three moving diamond textures with Dot-style feedback, preserving the single visible Normal element. Dot and saved preset IDs remain unchanged. Texture coordinates are set on every preset change, including full-UV reset when leaving an atlas preset, so pooled controls cannot retain a cropped sprite.
 
 The ESO preset has `native = true`. Runtime releases decorative-reticle replacement and hides only its custom crosshair root, leaving the resource ring active. ESO owns its appearance, targeting animation, impactful-hit feedback and stealth/disguise visibility. This mode does not apply OneCrosshair opacity/color/feedback to the native control; the crosshair-opacity slider is disabled. Switching back reacquires replacement normally. No native API/method is overridden.
 
@@ -66,3 +66,7 @@ The isolated ESO preview uses the first and last cells of the game's 16-cell `Es
 ## Crosshair scale (0.1.9)
 
 CrosshairController applies a fixed root scale of 2 to custom presets and 1 to native ESO preview. This doubles textures, spacing and positional feedback together; the existing scale-pulse multiplier composes with that base. Gameplay and preview share this renderer. ResourceRing is a sibling control and is unaffected. Preset data remains in its original design coordinates. No hit-color flash was implemented; the interrupted request was cancelled before any code changes.
+
+## Geometric transitions (0.1.10)
+
+Rays interpolates both endpoints over the existing 250 ms smoothstep. Normal has three overlapping pairs (one arm per pair hidden); Target opens both arms; Block moves persistent corners through a 60-degree triangular reorientation instead of sending opposite vertices through the center. Retargeting reads the current interpolated endpoints, so rapid target/block/release transitions stay continuous. Dot and Diamonds already move their persistent elements with this same animator and retain that behavior. The preview continues showing the three final states. No extra update loop, timing setting, native ESO animation change or red hit flash. Retired whole-state Rays DDS files are removed by the deployment allowlist.

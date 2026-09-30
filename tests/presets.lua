@@ -29,7 +29,7 @@ test("reference presets display their three states and interpolate transitions",
             O.CrosshairController.Update(c,{geometry=state},1,0,true)
             local visible=0
             for _,e in ipairs(c.elements) do if e.control.color[4]>.99 then visible=visible+1 end end
-            assert(visible==(id=="rays" and 1 or (state=="normal" and 1 or 3)))
+            assert(visible==(id=="rays" and (state=="normal" and 3 or 6) or (state=="normal" and 1 or 3)))
         end
         O.CrosshairController.Update(c,{geometry="normal"},1,0,true)
         O.CrosshairController.Update(c,{geometry="target"},1,1)
@@ -50,7 +50,7 @@ test("ESO preview uses single atlas cells; pooled controls reset UV and dimensio
     for _,id in ipairs({"dot","rays","diamonds"}) do
         O.CrosshairController.SetPreset(c,id,"normal")
         for _,e in ipairs(c.elements) do
-            close(e.control.textureCoords[1],0); close(e.control.textureCoords[2],1)
+            if not e.line then close(e.control.textureCoords[1],0); close(e.control.textureCoords[2],1) end
             assert(not e.control:IsHidden())
         end
         O.CrosshairController.SetPreset(c,"eso","normal")
@@ -92,4 +92,43 @@ test("native preview has full opacity and does not change the live reticle", fun
     end
     O.Preview.Refresh()
     close(O.Preview.examples[1].crosshair.root.alpha,.2)
+end)
+test("ray arms open geometrically and interrupted transitions preserve current endpoints", function()
+    local c=O.CrosshairController.New(GuiRoot)
+    O.CrosshairController.SetPreset(c,"rays","normal")
+    O.CrosshairController.Update(c,{geometry="normal"},1,0,true)
+    assert(#c.elements==6 and c.elements[1].line)
+    local startX=c.elements[1].control.anchors[BOTTOMRIGHT][4]
+    O.CrosshairController.Update(c,{geometry="target"},1,1)
+    O.CrosshairController.Update(c,{geometry="target"},1,126)
+    local point=c.elements[1].control.anchors[BOTTOMRIGHT]
+    assert(math.abs(point[4]-startX)>.1)
+    local x,y=point[4],point[5]
+    O.CrosshairController.Update(c,{geometry="block"},1,126)
+    point=c.elements[1].control.anchors[BOTTOMRIGHT]
+    close(point[4],x); close(point[5],y)
+    O.CrosshairController.Update(c,{geometry="block"},1,376)
+    for i,e in ipairs(c.elements) do
+        local p=O.PresetRegistry.Get("rays").states.block[i]
+        close(e.control.anchors[TOPLEFT][4],p.x); close(e.control.anchors[TOPLEFT][5],p.y)
+        close(e.control.anchors[BOTTOMRIGHT][4],p.x2); close(e.control.anchors[BOTTOMRIGHT][5],p.y2)
+        close(e.control.color[4],1)
+    end
+    O.CrosshairController.Update(c,{geometry="normal"},1,377)
+    O.CrosshairController.Update(c,{geometry="normal"},1,627)
+    for i,e in ipairs(c.elements) do close(e.control.color[4],i%2==1 and 1 or 0) end
+    close(c.root.scale,2)
+end)
+
+test("line and texture pools remain separate and reusable across preset switches", function()
+    local c=O.CrosshairController.New(GuiRoot)
+    O.CrosshairController.SetPreset(c,"rays","target")
+    local line=c.elements[1].control
+    O.CrosshairController.SetPreset(c,"diamonds","target")
+    assert(line:IsHidden()); local texture=c.elements[1].control
+    assert(texture~=line and texture.texture~=nil)
+    O.CrosshairController.SetPreset(c,"rays","block")
+    assert(c.elements[1].control==line and texture:IsHidden() and not line:IsHidden())
+    O.CrosshairController.SetPreset(c,"eso","normal")
+    assert(line:IsHidden() and c.elements[1].control==texture)
 end)

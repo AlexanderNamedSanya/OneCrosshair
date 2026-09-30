@@ -11,16 +11,24 @@ function O.CrosshairController.SetPreset(self, id, state)
     self.elements, self.preset = {}, preset
     -- Reuse a control pool across preset switches; element count is unrestricted.
     self.pool = self.pool or {}
+    self.linePool = self.linePool or {}
     for i, definition in ipairs(preset.elements) do
-        local c = self.pool[i] or O.Dot(self.root, definition.size or 3)
-        self.pool[i] = c
+        local line = definition.kind == "line"
+        local pool = line and self.linePool or self.pool
+        local c = pool[i] or (line and O.Control(self.root, CT_LINE) or O.Dot(self.root, definition.size or 3))
+        pool[i] = c
         c:SetHidden(false)
-        c:SetTexture(definition.texture or "OneCrosshair/Assets/Disc.dds")
-        local uv = definition.textureCoords or { 0, 1, 0, 1 }
-        c:SetTextureCoords(uv[1], uv[2], uv[3], uv[4])
-        c:SetDimensions(definition.width or definition.size or 3, definition.height or definition.size or 3)
+        if line then
+            c:SetThickness(definition.thickness or 1.2)
+            c:SetPixelRoundingEnabled(false)
+        else
+            c:SetTexture(definition.texture or "OneCrosshair/Assets/Disc.dds")
+            local uv = definition.textureCoords or { 0, 1, 0, 1 }
+            c:SetTextureCoords(uv[1], uv[2], uv[3], uv[4])
+            c:SetDimensions(definition.width or definition.size or 3, definition.height or definition.size or 3)
+        end
         local p = preset.states[state or "normal"][i] or {}
-        self.elements[i] = { control = c, x = A.New(p.x or 0), y = A.New(p.y or 0),
+        self.elements[i] = { control = c, line = line, x2 = A.New(p.x2 or 0), y2 = A.New(p.y2 or 0), x = A.New(p.x or 0), y = A.New(p.y or 0),
             alpha = A.New(p.alpha or 1), rotation = A.New(p.rotation or 0) }
     end
     self.pulseStart = nil
@@ -38,14 +46,19 @@ function O.CrosshairController.Update(self, state, opacity, now, immediate)
     self.root:SetScale(baseScale * (self.preset.combatFeedback and 1 or 1 + .12 * pulse))
     for i, element in ipairs(self.elements) do
         local p = self.preset.states[state.geometry][i] or { alpha = 0 }
-        for _, key in ipairs({ "x", "y", "alpha", "rotation" }) do
+        for _, key in ipairs(element.line and { "x", "y", "x2", "y2", "alpha" } or { "x", "y", "alpha", "rotation" }) do
             A.To(element[key], p[key] or (key == "alpha" and 1 or 0), now, immediate and 0 or 250)
         end
         local x, y = A.Value(element.x, now), A.Value(element.y, now)
         if self.preset.combatFeedback then x, y = self.preset.combatFeedback(i, x, y, pulse) end
         element.control:ClearAnchors()
-        element.control:SetAnchor(CENTER, self.root, CENTER, x, y)
+        if element.line then
+            element.control:SetAnchor(TOPLEFT, self.root, CENTER, x, y)
+            element.control:SetAnchor(BOTTOMRIGHT, self.root, CENTER, A.Value(element.x2, now), A.Value(element.y2, now))
+        else
+            element.control:SetAnchor(CENTER, self.root, CENTER, x, y)
+            element.control:SetTextureRotation(A.Value(element.rotation, now))
+        end
         element.control:SetColor(r, g, b, A.Value(element.alpha, now))
-        element.control:SetTextureRotation(A.Value(element.rotation, now))
     end
 end

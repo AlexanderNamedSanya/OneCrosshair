@@ -19,7 +19,7 @@ foreach ($file in $files) {
     }
 }
 # Explicit retired runtime files only; never mirror/delete other addon content.
-$retiredRelativePaths = @('HUD/GCDDiagnostics.lua', 'Effects/CriticalState.lua')
+$retiredRelativePaths = @('HUD/GCDDiagnostics.lua', 'Effects/CriticalState.lua', 'Assets/RaysNormal.dds', 'Assets/RaysTarget.dds', 'Assets/RaysBlock.dds')
 foreach ($relativePath in $retiredRelativePaths) {
     $retiredPath = [IO.Path]::GetFullPath((Join-Path $destinationRoot $relativePath))
     if (-not $retiredPath.StartsWith($destinationRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
