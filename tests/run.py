@@ -34,6 +34,9 @@ lua.execute((ROOT / "tests/weaving.lua").read_text(encoding="utf-8"))
 lua = runtime("en")
 lua.execute((ROOT / "tests/heavy_channel.lua").read_text(encoding="utf-8"))
 
+lua = runtime("en")
+lua.execute((ROOT / "tests/update_017.lua").read_text(encoding="utf-8"))
+
 # Verify public API symbols against the inspected upstream reference, when present.
 api_path = ROOT / ".reference/API.txt"
 if api_path.exists():

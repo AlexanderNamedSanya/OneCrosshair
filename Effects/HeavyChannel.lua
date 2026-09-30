@@ -6,7 +6,7 @@ local data = O.HeavyChannelData
 -- Four reference-used result globals are absent from the public enum snapshot.
 -- Compare only when present; never invent numeric result values.
 local function Result(result, expected) return expected ~= nil and result == expected end
-local function Enabled() return H.running and H.settings and H.settings.heavyChannel end
+local function Enabled() return H.running and H.settings and H.settings.gcd end
 local function Latency() return math.max(0, GetLatency and GetLatency() or 0) end
 local function GCD(now)
     local remaining, duration = 0, 0
@@ -32,16 +32,14 @@ local function Finish(now, keepPending)
     H.Stop(keepPending)
 end
 local function Description(id, slot)
-    if not id or id <= 0 or data.unbounded[id] or data.mendWounds[id] then return nil end
-    local channel, duration = GetAbilityCastInfo(id)
-    if type(duration) ~= "number" or duration ~= duration or duration == math.huge or duration <= 0 then return nil end
-    return { abilityId = id, slot = slot, kind = slot == 2 and "heavy" or (channel and "channel" or "cast"),
-        channeled = channel, duration = duration, crux = data.fatecarver[id] and data.Crux() or 0 }
+    local row = O.AbilityTimings.Refresh(id)
+    if not row or row.excluded then return nil end
+    return { abilityId = id, slot = slot, kind = slot == 2 and "heavy" or (row.channeled and "channel" or "cast"),
+        channeled = row.channeled, duration = row.duration }
 end
 local function Start(timing, start, target)
     local now = GetFrameTimeMilliseconds()
     H.Stop()
-    timing.duration = timing.duration + timing.crux * data.cruxExtensionMs
     timing.startMs, timing.endMs = start, start + timing.duration
     if timing.endMs <= now then return end
     timing.active, timing.progress = true, O.Clamp((now-start)/timing.duration)
@@ -215,14 +213,22 @@ function H.Read(enabled, now, showCompletion)
                     return 1 -- one observed frame, never extend the timing interval
                 end
                 H.Stop(true)
-            else s.progress = O.Clamp((now - s.startMs) / s.duration); return s.progress end
+            else
+                s.progress = O.Clamp((now - s.startMs) / s.duration)
+                -- Same capped ping-zone heuristic as normal GCD. A short cast
+                -- cannot cue LA before the underlying global cooldown allows it.
+                if s.kind ~= "heavy" then
+                    s.ready = s.ready or math.max(s.endMs - now, (GCD(now))) <= math.min(Latency(), 150)
+                end
+                return s.progress, s.ready
+            end
         end
     end
     return nil
 end
 
-function H.Presentation(progress)
+function H.Presentation(progress, ready)
     if progress == nil then return nil end
-    if progress >= 1 then return 1, O.GCD.readyColor, 1 end
+    if ready or progress >= 1 then return 1, O.GCD.readyColor, 1 end
     return progress, O.GCD.idleColor, 1
 end

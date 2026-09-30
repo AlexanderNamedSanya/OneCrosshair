@@ -7,11 +7,17 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 - Addon manifest/API 101051, LibAddonMenu-2.0 dependency, account-wide version-1 SavedVariables.
 - English defaults and Russian String ID overrides selected through the manifest language macro. Empty default-fallback files cover other stock locales. No runtime language branching.
 - Dot preset, registry-driven renderer with arbitrary element count and interpolated transitions; separate block/target and combat/color decisions.
-- Live resource and shield display, warning/critical effects, real global cooldown visualization, conservative action-correlated feedback, common visibility modes.
+- Live resource and shield display, low-resource warnings, real global cooldown visualization, conservative action-correlated feedback, common visibility modes.
 - Automatic isolated three-state settings preview and reversible vanilla decorative-reticle hiding.
 - Lua 5.1 mock contract suite, engine-symbol checks against inspected documentation, deterministic DDS generation.
 
-## Accepted runtime behavior and current release (0.1.6)
+## Current release: 0.1.7
+
+The latest user request replaces Critical State entirely with Low Resource Warning for all three resources. The warning covers the whole attribute arc and extends outward by two stroke widths; no side dimming remains. Heavy/cast/channel belongs to the GCD switch, and legacy saved options are retired. Three temporary resource geometry sliders and enabled bars in all three preview examples are implemented.
+
+Nonstandard timing is stored in a client-derived skill table (including morphs/ranks/chained IDs and current scribing), refreshed before use. The user explicitly selected the next-LA cue BEFORE cast/channel completion with ping compensation. Green requires both cast and live GCD remaining <= min(ping,150 ms); it stays until end/cancel. Short casts cannot cue while the GCD is still outside that zone. Normal GCD timing and the approved one-frame full Heavy completion remain unchanged. See UPDATE_0_1_7.md for coverage, exceptions and validation. New native-line geometry and the early cast/channel cue require client validation after reload; older confirmations below apply to earlier builds.
+
+## Previous accepted runtime behavior (0.1.6)
 
 The user accepted 0.1.5 in the ESO client: Heavy start/progress/full completion/early release/Block/Dodge; Channel start/progress/normal completion, movement without false cancellation, Block/Dodge; and bottom ownership/restoration. Critical Health and normal GCD/weaving are also confirmed. General pursuit detection remains inactive. Finite timing is still derived from events/API metadata/heuristics, not an authoritative universal progress API.
 

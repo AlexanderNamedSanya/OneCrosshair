@@ -14,6 +14,7 @@ function O.Runtime.New(settings)
     self.ring = O.ResourceRing.New(self.root)
     O.ReticleReplacement.Initialize()
     O.CombatFeedback.Initialize(settings, self.crosshair)
+    O.AbilityTimings.Initialize()
     O.HeavyChannel.Initialize(settings)
     EVENT_MANAGER:RegisterForEvent(O.name .. "Activated", EVENT_PLAYER_ACTIVATED, function()
         self.active = true
@@ -37,34 +38,33 @@ function O.Runtime.Update(self)
     self.root:SetHidden(not visible)
     O.ReticleReplacement.SetActive(visible)
     if not visible then
-        O.HeavyChannel.Read(s.heavyChannel, now, false) -- expire without a hidden completion frame
+        O.HeavyChannel.Read(s.gcd, now, false) -- expire without a hidden completion frame
         self.gcd = O.GCD.New()
         return
     end
+    O.ResourceRing.Configure(self.ring, s)
     local state = O.StateController.Read()
     O.CrosshairController.SetPreset(self.crosshair, s.preset, state.geometry)
     O.CrosshairController.Update(self.crosshair, state, s.crosshairOpacity, now)
     local fills = { health = O.Resource.Read(self.health, now), magicka = O.Resource.Read(self.magicka, now),
         stamina = O.Resource.Read(self.stamina, now) }
-    local _, dim, criticalGlow = O.CriticalState.Read(s.criticalState, self.health.fraction)
     local healthAlpha
     for _, name in ipairs({ "health", "magicka", "stamina" }) do
         local resource = self[name]
         local alpha = O.VisibilityController.Alpha(self.visibility, name, s.visibility, s.resources,
             state.combat, resource.fraction < 1, now) * s.hudOpacity
-        if name == "health" then healthAlpha = alpha else alpha = alpha * dim end
-        local glow = name ~= "health" and O.LowResource.Active(s.lowResource, resource.fraction)
-        O.ResourceRing.Draw(self.ring, name, fills[name], resource.color, alpha, glow,
-            name == "health" and criticalGlow or nil)
+        if name == "health" then healthAlpha = alpha end
+        local glow = O.LowResource.Active(s.lowResource, resource.fraction)
+        O.ResourceRing.Draw(self.ring, name, fills[name], resource.color, alpha, glow)
     end
     O.ResourceRing.Draw(self.ring, "shield", O.Shield.Read(self.shield, self.health.maximum, now),
         O.Shield.color, s.shield and healthAlpha or 0, false)
-    local heavy = O.HeavyChannel.Read(s.heavyChannel, now)
+    local heavy, ready = O.HeavyChannel.Read(s.gcd, now)
     local gcd = O.GCD.Read(self.gcd)
     local active = heavy ~= nil or (s.gcd and gcd.active)
     local alpha = O.VisibilityController.Alpha(self.visibility, "bottom", s.visibility,
         s.gcd or heavy ~= nil, state.combat, active, now) * s.hudOpacity
     local fill, color, intensity = O.GCD.Presentation(gcd)
-    if heavy ~= nil then fill, color, intensity = O.HeavyChannel.Presentation(heavy) end
+    if heavy ~= nil then fill, color, intensity = O.HeavyChannel.Presentation(heavy, ready) end
     O.ResourceRing.Draw(self.ring, "bottom", fill, color, alpha * intensity, false)
 end

@@ -4,8 +4,10 @@ local strings = {
     CROSSHAIR_OPACITY = "Crosshair Opacity", HUD_OPACITY = "HUD Opacity", HUD = "HUD",
     RESOURCES = "Resources", GCD = "GCD", VISIBILITY = "Visibility",
     ALWAYS = "Always", COMBAT_ONLY = "Combat Only", DYNAMIC = "Dynamic", OFF = "Off",
-    EFFECTS = "Effects", LOW_RESOURCE = "Low Resource Warning", CRITICAL_STATE = "Critical State",
-    SHIELD = "Shield", HEAVY_CHANNEL = "Heavy Attack / Channel Progress", COMBAT_FEEDBACK = "Combat Feedback",
+    EFFECTS = "Effects", LOW_RESOURCE = "Low Resource Warning",
+    SHIELD = "Shield", COMBAT_FEEDBACK = "Combat Feedback",
+    RESOURCE_GEOMETRY = "Resource Geometry (temporary)", RESOURCE_THICKNESS = "Line Thickness",
+    RESOURCE_LENGTH = "Arc Length (0–100%)", RESOURCE_RADIUS = "Ring Radius",
 }
 for key, value in pairs(strings) do
     local id = "SI_ONECROSSHAIR_" .. key

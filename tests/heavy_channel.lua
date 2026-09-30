@@ -8,7 +8,7 @@ local function setup()
     T.camera,T.reticleHidden,T.weaponUsable=true,false,true
     T.cooldowns,T.castInfo,T.slotTypes,T.crafted={}, {}, {}, {}
     T.ids={[1]=101,[2]=102,[3]=103}; T.crux,T.toggled=nil,nil
-    O.settings.heavyChannel,O.settings.gcd,O.settings.visibility=true,true,"ALWAYS"
+    O.settings.gcd,O.settings.visibility=true,"ALWAYS"
     O.runtime.gcd=O.GCD.New()
     Fire(EVENT_PLAYER_ACTIVATED)
     T.now=-100; O.Runtime.Update(O.runtime)
@@ -163,11 +163,11 @@ test("failed channel, toggle off, changed weapon and deactivation clear ownershi
     T.ids[2]=102; heavy(); Fire(EVENT_PLAYER_DEACTIVATED); ended("deactivated")
     combat(ACTION_RESULT_BEGIN,102,ACTION_SLOT_TYPE_HEAVY_ATTACK); assert(not H.state.active)
 end)
-test("turning feature off immediately reveals GCD and ignores new timing events", function()
+test("GCD master hides bottom and ignores all new timing events", function()
     setup(); heavy(); update(500,500)
-    O.settings.heavyChannel=false; local bar=update(600,400); ended("disabled"); close(bar.fill,.6)
+    O.settings.gcd=false; local bar=update(600,400); ended("disabled"); close(bar.alpha,0)
     heavy(); skill(2000,true); combat(ACTION_RESULT_BEGIN,103); assert(not H.state.active and not H.pending)
-    O.settings.heavyChannel=true; update(700,300); assert(not H.state.active)
+    O.settings.gcd=true; update(700,300); assert(not H.state.active)
     heavy(); assert(H.state.active)
 end)
 test("crafted ability resolves runtime ID and duration without stale metadata cache", function()
@@ -238,12 +238,12 @@ test("invalid duration values never create unbounded ownership", function()
         assert(not H.state.active)
     end
 end)
-test("channel completion can reveal green and Heavy works with GCD display disabled", function()
+test("channel cues before completion and GCD master disables Heavy", function()
     setup(); T.cooldowns[3]={1000,1000,true,ACTION_TYPE_ABILITY}; skill(920,true)
-    local bar=update(900,100); assert(bar.color==O.GCD.idleColor and H.state.active)
+    local bar=update(900,100); assert(bar.color==O.GCD.readyColor and H.state.active)
     bar=update(920,80); assert(bar.color==O.GCD.readyColor and not H.state.active)
     setup(); O.settings.gcd=false; heavy(); bar=update(500,0)
-    close(bar.fill,.5); assert(bar.color==O.GCD.idleColor and bar.alpha>0)
+    assert(not H.state.active); close(bar.alpha,0)
 end)
 test("accepted channel replacement ends Heavy and keeps its pending confirmation", function()
     setup(); heavy(2000); T.now=200; skill(1500,true)
@@ -316,7 +316,7 @@ test("channel block dodge and interruption before full duration have no completi
     end
 end)
 test("feature Off cancels a completion frame and next Heavy start cannot be swallowed", function()
-    setup(); heavy(); update(1000,0); O.settings.heavyChannel=false
+    setup(); heavy(); update(1000,0); O.settings.gcd=false
     local bar=update(1016,0); assert(not H.state.active and bar.color==O.GCD.idleColor)
     setup(); heavy(); update(1000,0); T.now=1001; heavy()
     assert(H.state.startMs==1001 and not H.state.completionShown)
@@ -329,7 +329,5 @@ test("cleanup leaves no diagnostic command, snapshots, output or extra update lo
     assert(#T.chat==0 and H.serial==nil and H.state.reason==nil and H.state.source==nil and H.state.stoppedAt==nil)
     assert(O.runtime.gcd.la==nil and O.runtime.gcd.sourceSlot==nil and O.runtime.gcd.cycle==nil)
     local count=0; for _ in pairs(EVENT_MANAGER.updates) do count=count+1 end; assert(count==1)
-    for _,option in ipairs(LibAddonMenu2.options) do
-        if option.name==GetString(SI_ONECROSSHAIR_HEAVY_CHANNEL) then assert(option.tooltip==nil) end
-    end
+    assert(O.Settings.defaults.heavyChannel==nil and O.Settings.defaults.criticalState==nil)
 end)

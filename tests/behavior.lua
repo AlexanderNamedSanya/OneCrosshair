@@ -57,8 +57,7 @@ test("fixed arc directions and centered health/bottom fill", function()
 end)
 test("optional effects threshold boundaries", function()
     assert(O.LowResource.Active(true,.25)); assert(not O.LowResource.Active(true,.251))
-    local critical,dim = O.CriticalState.Read(true,.25); assert(critical); close(dim,.35)
-    assert(not O.CriticalState.Read(false,.1))
+    assert(not O.LowResource.Active(false,.1)); assert(O.CriticalState == nil)
 end)
 test("direct feedback consumes action and rejects periodic/incoming events", function()
     local c = O.runtime.crosshair
@@ -151,46 +150,39 @@ test("LA availability is observational, never the cue gate", function()
     O.GCD.Read(g); assert(g.active and g.ready); IsSlotUsable = usable
 end)
 
-test("critical glow spans empty HP without solid fill and removes immediately", function()
+test("warning spans the empty resource and fades outward independently of solid fill", function()
     local ring = O.runtime.ring
-    local _,dim,glow = O.CriticalState.Read(true,.1)
-    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false,glow)
-    close(ring.arcs.health.fill,.1); close(dim,.35)
+    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,true)
     for _,point in ipairs(ring.arcs.health) do
-        close(point.glow.color[4],.12)
+        assert(point.glows[1].color[4] > point.glows[4].color[4])
+        assert(point.glows[4].color[4] > 0)
         if point.threshold > .12 then close(point.control.color[4],0) end
     end
-    _,dim,glow = O.CriticalState.Read(true,.251)
-    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false,glow)
-    close(dim,1)
-    for _,point in ipairs(ring.arcs.health) do close(point.glow.color[4],0) end
-    _,_,glow = O.CriticalState.Read(false,.1); assert(glow == nil)
-    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,0,false,.12)
-    for _,point in ipairs(ring.arcs.health) do close(point.glow.color[4],0) end
+    O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false)
+    for _,point in ipairs(ring.arcs.health) do
+        for _,glow in ipairs(point.glows) do close(glow.color[4],0) end
+    end
 end)
-test("larger circular bar geometry preserves gaps and aligns dependent layers", function()
+
+test("circular geometry and shield use the same path and outward-only 200 percent glow", function()
     local ring = O.runtime.ring
-    local a,b = ring.arcs.health[64].control,ring.arcs.stamina[64].control
-    local distance = math.sqrt((a.anchor[4]-b.anchor[4])^2 + (a.anchor[5]-b.anchor[5])^2)
-    assert(distance > 9 and distance < 11)
+    local function radius(c) return math.sqrt(c.anchor[4]^2+c.anchor[5]^2) end
     local top = ring.arcs.health
-    assert(math.abs(top[1].control.anchor[5]-top[32].control.anchor[5]) < 9)
-    close(a.width,4); close(ring.arcs.shield[1].control.width,6)
-    close(top[1].glow.width,11)
-    close(math.abs(top[32].control.anchor[5]), math.abs(ring.arcs.stamina[32].control.anchor[4]))
-    close(math.abs(top[32].control.anchor[5]), 42.25 - 9 / 4096)
-    close(42.25 / ((36+29)/2),1.3)
+    close(top[1].control.thickness,4); close(ring.arcs.shield[1].control.thickness,6)
     for i=1,64 do
+        close(radius(top[i].control),42.25)
         close(top[i].control.anchor[4],ring.arcs.shield[i].control.anchor[4])
         close(top[i].control.anchor[5],ring.arcs.shield[i].control.anchor[5])
-        close(top[i].control.anchor[4],top[i].glow.anchor[4])
-        close(top[i].control.anchor[5],top[i].glow.anchor[5])
+        local inner,outer=top[i].glows[1],top[i].glows[#top[i].glows]
+        close(radius(inner)-inner.thickness/2,42.25+2)
+        close(radius(outer)+outer.thickness/2,42.25+2+8)
     end
     close(O.PresetRegistry.Get("dot").elements[1].size,3)
 end)
+
 test("heavy overrides green with gray, cancel restores GCD in same frame", function()
     T.now = 5000; O.settings.visibility = "ALWAYS"; O.settings.resources = true
-    O.settings.gcd = true; O.settings.heavyChannel = true; T.weaponUsable = true
+    O.settings.gcd = true; T.weaponUsable = true
     T.cooldowns = {[3]={100,800,true,ACTION_TYPE_ABILITY}}
     O.HeavyChannel.provider = {Read=function() return {active=true,startMs=4000,endMs=6000} end}
     O.Runtime.Update(O.runtime)
@@ -200,16 +192,15 @@ test("heavy overrides green with gray, cancel restores GCD in same frame", funct
     T.cooldowns = {}; O.Runtime.Update(O.runtime)
     assert(O.runtime.ring.arcs.bottom.color == O.GCD.idleColor)
 end)
-test("critical runtime dims only side resources and respects switches", function()
+test("low health warns without dimming other resources and respects its switch", function()
     T.powers[1] = 10; T.now = 6000; O.Runtime.Update(O.runtime)
     T.now = 6200; O.Runtime.Update(O.runtime)
     close(O.runtime.ring.arcs.health.fill,.1)
-    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity*.35)
+    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
     close(O.runtime.ring.arcs.bottom.alpha, O.settings.hudOpacity*.25)
-    close(O.runtime.crosshair.elements[1].control.color[2],1)
-    O.settings.criticalState = false; O.Runtime.Update(O.runtime)
-    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
-    close(O.runtime.ring.arcs.health[1].glow.color[4],0)
-    O.settings.criticalState = true; T.powers[1] = 26; O.Runtime.Update(O.runtime)
-    close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
+    assert(O.runtime.ring.arcs.health[1].glows[1].color[4]>0)
+    O.settings.lowResource = false; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.health[1].glows[1].color[4],0)
+    O.settings.lowResource = true; T.powers[1] = 26; O.Runtime.Update(O.runtime)
+    close(O.runtime.ring.arcs.health[1].glows[1].color[4],0)
 end)

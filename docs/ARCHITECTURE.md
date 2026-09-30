@@ -16,10 +16,11 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 | ReticleReplacement | Reversible hide of the vanilla decorative texture only |
 | PresetRegistry | Ordered registry, ID lookup and default fallback |
 | CrosshairController | Texture pool and animated preset coordinates/alpha/rotation; color and feedback |
-| ResourceRing | Four fixed shallow bowed bars with rounded samples, coincident shield geometry, separate solid/glow layers |
+| ResourceRing | Four configurable circular quadrants made from pooled native lines; coincident shield geometry; outward warning bands |
 | Resource + Health/Magicka/Stamina | Live fractions, stable palette and 150 ms smoothing |
 | Shield | Shield fraction against maximum health, clamped and smoothed |
 | GCD | Read ability-type globals on physical slots 3..8; derive the latched next-LA ping-zone cue; own bottom presentation |
+| AbilityTimings | Client-built non-instant skill table: morphs/ranks, chains, current scribing; fresh per-use metadata |
 | HeavyChannel + HeavyChannelData | Independent finite Heavy/cast/channel owner; event-confirmed start, cancellation, timeout and isolated exceptions |
 | Effects | Presentation rules and conservative feedback event correlation |
 | Preview | Isolated Normal/Target/Block examples, immediate preset changes |
@@ -33,19 +34,21 @@ An optional pure presentation function `combatFeedback(index, x, y, pulse)` retu
 
 ## Timing limitations
 
-HeavyChannel owns a native event-derived state plus the existing optional provider seam. `Read(enabled, now)` returns progress or nil. Its state exposes active/kind/progress, identity and interval. Slot candidates require cooldown/combat confirmation; Heavy requires a matching equipped attack BEGIN. Cancellation/expiry removes ownership, revealing current GCD without modifying it. State updates continue while HUD is hidden; deactivation clears active/pending timing. The sole runtime update loop services both modules. See HEAVY_CHANNEL_REFERENCE.md for signal classification, exceptions and limitations. Pursuit stays unasserted. Green is a latency-based cue: remaining GCD <= min(GetLatency(), 150 ms), latched until completion or a new observed cycle. It is a heuristic, not a server-certified input window. See WEAVING_REFERENCE.md.
+HeavyChannel owns a native event-derived state plus the existing optional provider seam. `Read(enabled, now)` returns progress and a cast/channel ready flag, or nil. Its state exposes active/kind/progress, identity and interval. Slot candidates require cooldown/combat confirmation; Heavy requires a matching equipped attack BEGIN. Cancellation/expiry removes ownership, revealing current GCD without modifying it. State updates continue while HUD is hidden; deactivation clears active/pending timing. The sole runtime update loop services both modules. See HEAVY_CHANNEL_REFERENCE.md for signal classification, exceptions and limitations. Pursuit stays unasserted. Green is a latency-based cue: remaining GCD <= min(GetLatency(), 150 ms), latched until completion or a new observed cycle. It is a heuristic, not a server-certified input window. See WEAVING_REFERENCE.md.
 
-`GCD.Presentation` returns fill/color/intensity: idle is full gray at .25; active is actual progress at 1; ready is full green at 1. Runtime composes visibility and delegates active Heavy/Channel presentation to `HeavyChannel.Presentation`: gray below full progress, the existing GCD green for full progress. Heavy receives one user-approved completion frame at its unchanged end timestamp; the next read releases ownership. Channel/Cast is never extended. Early cancellation releases immediately without completion green. Hidden gameplay consumes no completion frame. `CriticalState.Read` supplies side dimming and a low-opacity full-geometry halo independently of health fraction; ResourceRing keeps solid and glow alpha separate.
+`GCD.Presentation` returns fill/color/intensity: idle is full gray at .25; active is actual progress at 1; ready is full green at 1. Runtime delegates Heavy/cast/channel presentation to `HeavyChannel.Presentation(progress, ready)`. A finite cast/channel cues the next LA once `max(castRemaining, liveGCDRemaining) <= min(max(ping, 0), 150)`, latching until it ends or cancels. Heavy preserves its one approved full-charge green frame. Neither kind extends its timing interval. The single GCD setting enables all bottom timing. LowResource applies equally to Health/Magicka/Stamina, without side dimming.
+
+`AbilityTimings.entries[abilityId]` records nonzero finite cast/channel metadata, localized name and narrow exclusions/corrections. The table rebuilds on activation, full skill updates, skill-line additions and leaving crafting. Each used ID is refreshed (including equipped Heavy and resolved scribing IDs), then copied into a per-action snapshot, preserving pre-consumption Crux. Catalog coverage and caveats are in UPDATE_0_1_7.md. No offline guessed duration list or reference-addon dependency is shipped.
 
 ## UI ownership
 
 No CVar, secure gameplay function, vanilla method replacement or external hidden request is changed. A post-hook reapplies decorative texture hiding after ESO refreshes it; it is inert outside replacement ownership. Leaving gameplay or deactivating restores visibility through the original reticle's `UpdateHiddenState`. Interaction prompts, stealth eye, padlock and game input are preserved.
 
-Controls are pooled across preset changes; ring controls are allocated once. Arc writes are skipped when fill/color/opacity/glow are unchanged. Runtime does not depend on an OnUpdate handler on a hidden control.
+Controls are pooled across preset changes; ring controls are allocated once. Arc writes are skipped when fill/color/opacity/glow are unchanged. Glow writes are also skipped when only solid fill changes. Geometry is rebuilt only when its three dimensions change. Runtime does not depend on an OnUpdate handler on a hidden control.
 
 ## Geometry and timing ownership
 
-ResourceRing owns radius, half-span, bow, thickness, shield expansion, glow diameter and sample count in one local geometry table. Resource modules and preset sizes do not own or duplicate these values. All five solid layers (including shield) and glow anchors use the same positional profile.
+ResourceRing owns validated settings for radius (20..100), thickness (1..12) and quarter-circle arc length (0..100%). Defaults are 42.25, 4 and 85%. Zero hides the ring root including shield and glow; 100 joins all four endpoints into a circle. Each quadrant has 64 line segments. Eight fading bands span the full attribute outward from its solid edge by twice its thickness; warning opacity is independent of resource fill. Shield retains a coincident centerline with two extra thickness units. Preview uses separate ring instances, static sample values and size-to-fit for unusually large dimensions.
 
 GCD's active-bar cooldown selection and center-out progress are unchanged. HUD/GCD.lua owns the ping-zone threshold and cue latch; OneCrosshair.lua remains composition only. A rising cooldown or a prior sample whose remaining time elapsed identifies a new observed cycle, even without a zero frame. Hidden/deactivated gameplay clears the model through Runtime. The former slot-1 diagnostic reads and cycle counter are removed. No LA hit, weapon table, queue, additional event handler or update registration is required.
 

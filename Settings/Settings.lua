@@ -3,13 +3,19 @@ O.Settings = {}
 O.Settings.defaults = {
     preset = "dot", crosshairOpacity = 1, hudOpacity = .85,
     resources = true, gcd = true, visibility = "DYNAMIC",
-    lowResource = true, criticalState = true, shield = true,
-    heavyChannel = true, combatFeedback = true,
+    lowResource = true, shield = true,
+    combatFeedback = true,
+    resourceThickness = 4, resourceLength = 85, resourceRadius = 42.25,
 }
 function O.Settings.Load()
     local s = ZO_SavedVars:NewAccountWide("OneCrosshairSavedVariables", 1, nil, O.Settings.defaults)
     for key, default in pairs(O.Settings.defaults) do
         if type(s[key]) ~= type(default) then s[key] = default end
+    end
+    s.criticalState, s.heavyChannel = nil, nil -- retired options; GCD is authoritative
+    for key, bounds in pairs({ resourceThickness = {1,12}, resourceLength = {0,100}, resourceRadius = {20,100} }) do
+        if s[key] ~= s[key] then s[key] = O.Settings.defaults[key] end
+        s[key] = math.max(bounds[1], math.min(bounds[2], s[key]))
     end
     s.crosshairOpacity, s.hudOpacity = O.Clamp(s.crosshairOpacity), O.Clamp(s.hudOpacity)
     s.preset = O.PresetRegistry.Get(s.preset).id
@@ -31,9 +37,9 @@ function O.Settings.Initialize(s)
     local function header(key) add({ type = "header", name = text(key) }) end
     local function checkbox(key, label)
         add({ type = "checkbox", name = text(label), getFunc = function() return s[key] end,
-            setFunc = function(value) s[key] = value end, width = "full" })
+            setFunc = function(value) s[key] = value; O.Preview.Refresh() end, width = "full" })
     end
-    add({ type = "custom", width = "full", minHeight = 75, maxHeight = 75,
+    add({ type = "custom", width = "full", minHeight = 200, maxHeight = 200,
         createFunc = function(control) O.Preview.Initialize(control, s) end,
         refreshFunc = function() O.Preview.Refresh() end })
     header("CROSSHAIR")
@@ -57,12 +63,18 @@ function O.Settings.Initialize(s)
     add({ type = "dropdown", name = text("VISIBILITY"),
         choices = { text("ALWAYS"), text("COMBAT_ONLY"), text("DYNAMIC"), text("OFF") },
         choicesValues = { "ALWAYS", "COMBAT_ONLY", "DYNAMIC", "OFF" },
-        getFunc = function() return s.visibility end, setFunc = function(value) s.visibility = value end })
+        getFunc = function() return s.visibility end, setFunc = function(value) s.visibility = value; O.Preview.Refresh() end })
+    header("RESOURCE_GEOMETRY")
+    for _, item in ipairs({ {"resourceThickness", "RESOURCE_THICKNESS", 1, 12, .5},
+        {"resourceLength", "RESOURCE_LENGTH", 0, 100, 1}, {"resourceRadius", "RESOURCE_RADIUS", 20, 100, .25} }) do
+        local key = item[1]
+        add({ type = "slider", name = text(item[2]), min = item[3], max = item[4], step = item[5],
+            getFunc = function() return s[key] end,
+            setFunc = function(value) s[key] = value; O.Preview.Refresh() end })
+    end
     header("EFFECTS")
     checkbox("lowResource", "LOW_RESOURCE")
-    checkbox("criticalState", "CRITICAL_STATE")
     checkbox("shield", "SHIELD")
-    checkbox("heavyChannel", "HEAVY_CHANNEL")
     checkbox("combatFeedback", "COMBAT_FEEDBACK")
     LAM:RegisterOptionControls(O.name .. "Settings", options)
     CALLBACK_MANAGER:RegisterCallback("LAM-PanelOpened", function(opened)
