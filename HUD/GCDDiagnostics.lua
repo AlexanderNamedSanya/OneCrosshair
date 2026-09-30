@@ -29,11 +29,11 @@ function D.Capture(gcd)
         Count("usedBlocked", not la.used)
         Count("usableBlocked", not la.usable)
         Count("failureBlocked", la.failure)
-        Count("cooldownBlocked", la.remaining == nil or la.remaining > 0)
+        Count("cooldownBlocked", not la.cooldownClear)
     end
     local key = table.concat({ tostring(gcd.active), tostring(gcd.ready), tostring(la.available),
         tostring(la.used), tostring(la.usable), tostring(la.failure),
-        tostring(la.remaining and la.remaining > 0), tostring(la.global), tostring(la.globalSlotType) }, ":")
+        tostring(la.cooldownClear), tostring(la.sharedGCD), tostring(la.global), tostring(la.globalSlotType) }, ":")
     -- Periodic active samples plus gate changes and a single completion row.
     if key == D.lastKey and (not gcd.active or now - D.lastAt < INTERVAL) then return end
     if not gcd.active and not D.wasActive then return end
@@ -76,10 +76,10 @@ SLASH_COMMANDS["/ocgcd"] = function(command)
         for i = (page - 1) * PAGE + 1, math.min(page * PAGE, #D.rows) do
             local row = D.rows[i]
             local s = row.la
-            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s id=%s type=%s bar=%s",
+            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s shared=%s id=%s type=%s bar=%s",
                 i, row.time, tostring(row.active), tostring(row.ready), tostring(row.gcdRemaining), tostring(row.gcdDuration),
                 tostring(row.sourceSlot), tostring(s.available), tostring(s.used), tostring(s.usable), tostring(s.failure),
-                tostring(s.remaining), tostring(s.duration), tostring(s.global), tostring(s.globalSlotType),
+                tostring(s.remaining), tostring(s.duration), tostring(s.global), tostring(s.globalSlotType), tostring(s.sharedGCD),
                 tostring(row.ability), tostring(row.slotType), tostring(row.hotbar)))
         end
     end

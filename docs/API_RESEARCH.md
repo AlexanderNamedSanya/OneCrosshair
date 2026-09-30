@@ -1,5 +1,13 @@
 # API research and verification
 
+## Current result: 0.1.3 shared-GCD correction
+
+The user supplied 16 records for LA ability 16037, slot type 1, hotbar 1. In every active record slot-1 remaining/duration exactly match the selected ability GCD with global=true/type=1. Used/usable remain true; failure is true only in rows 1–2, clearing at row 3 with 833/1000 ms remaining. The timer stays positive until row 12 (idle); row 13 begins another GCD with failure already false.
+
+The unconditional slot-1 `remaining<=0` requirement therefore prevented green throughout the active GCD. Version 0.1.3 accepts zero remaining OR a shared ability/crafted-ability global timer with exact remaining AND duration equality. Used/usable/no-failure checks remain, as does the existing GCD detector. Local, different, item and unknown timers remain blocking. No fixed delay, percentage or guessed tolerance is introduced. Exact matching is conservative; later differing samples should be inspected rather than masked with an arbitrary tolerance.
+
+Lua 5.1 replay of all 16 records yields gray in rows 1–2, full green in rows 3–11 and 13–16, and translucent gray idle in row 12. Additional negative cases retain all other gates; the 26-case suite passes. This proves the old condition failed on the supplied data and the correction handles that data, not that all weapons or optimal server weaving timing have been validated in-game. Diagnostics remain temporarily available with `shared` and corrected blocker counts. Earlier sections below document investigation history.
+
 Inspected 2026-09-30. Upstream `live/ESOUIDocumentation.txt` declares API **101051**. Local research copies are ignored under `.reference`; they are not addon dependencies.
 
 ## Primary sources

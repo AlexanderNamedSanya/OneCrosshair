@@ -1,10 +1,10 @@
-# Temporary slot-1 diagnostic capture (0.1.2)
+# Temporary slot-1 diagnostic capture
 
-The client test proves the 0.1.1 readiness conjunction never passed in that test. It does **not** identify which operand failed. API signatures alone cannot establish those live values. Working GCD detection and the predicate have therefore been retained while adding an opt-in probe.
+The supplied 0.1.2 trace identified the blocker: slot 1 mirrors the active ability-global cooldown, while used/usable are true and failure clears at row 3. Version 0.1.3 exempts this shared timer only when its ability type and remaining/duration match the selected GCD. Other readiness gates remain. This temporary probe is retained for client confirmation.
 
 ## In-game steps
 
-1. `/reloadui` to load 0.1.2. Confirm the larger, thicker, rounder ring; Dot should be unchanged. Check shield alignment and, if practical, the already-correct Critical glow at low HP.
+1. `/reloadui` to load 0.1.3. Confirm the entire bottom bar turns green when the state failure clears during GCD, then gray idle at completion. Geometry and CriticalState are unchanged from 0.1.2.
 2. Target a training dummy with your usual weapon. Keep GCD enabled and a visibility mode that shows it in combat.
 3. Enter `/ocgcd on`, close chat and use several ordinary instant abilities for 4–5 seconds, then your usual LA + ability sequence for another 4–5 seconds. Observe that the normal GCD fill still works and whether any green occurs. Avoid changing weapons during this first capture.
 4. Enter `/ocgcd off`, then `/ocgcd summary`. Capture also stops after 15 seconds or 256 rows, evaluated on the next update or command; `off` is harmless if it has already stopped.
@@ -25,6 +25,7 @@ No ongoing output is printed per frame. Automatic output consists only of START/
 | `usable` | Raw `IsSlotUsable(1)` |
 | `fail` | Raw `ActionSlotHasNonCostStateFailure(1)` |
 | `cd=remaining/duration/global/type` | All four raw `GetSlotCooldownInfo(1)` returns; milliseconds for the first two |
+| `shared` | Global ability/crafted-ability timer exactly matching the current ability GCD remaining/duration |
 | `id`, `type`, `bar` | Slot-1 bound ID, slot type and active hotbar category, to contextualize the capture |
 
 `nil` is kept as `nil`, not coerced to zero/false. Completion rows show `active=false`; LA predicate fields are nil there because only active-GCD frames evaluate readiness. The active GCD progress remains based on its own selected ability slot, not the slot-1 timer.
@@ -36,10 +37,10 @@ Counts are **observed active frames**, not durations, cooldown percentages or ju
 - `usedBlocked`: `used` false/nil.
 - `usableBlocked`: `usable` false/nil.
 - `failureBlocked`: `fail` truthy.
-- `cooldownBlocked`: slot-1 remaining is nil or positive.
+- `cooldownBlocked`: slot-1 remaining is nil, or positive without qualifying as the matching shared GCD. Positive `cd` with `shared=true` no longer blocks readiness.
 - `apiMissing`: required function missing.
 - `ready`: frames when the original conjunction actually passed.
 
 If `active=0`, the capture did not observe an active GCD while the gameplay HUD was updating; repeat with chat closed and abilities visibly filling the bottom bar. If `active>0`, compare each blocked count with it and inspect sample pages. For example, a gate blocked on every active frame is direct evidence that it prevents green in that capture. It does not by itself justify removing that check: its actual ESO semantics must be established before changing the predicate. If `ready>0` but the bar remains gray, report this separately; presentation/visibility then also needs investigation.
 
-This probe does not hook attack inputs or use private APIs. It reuses documented public read functions already verified in the project's API snapshot. No actual client data has yet been received for 0.1.2, so the failing gate and a correct replacement condition are still unknown.
+This probe does not hook attack inputs or use private APIs. It reuses documented public read functions already verified in the project's API snapshot. The supplied trace establishes the old gate's failure, but not universal optimal weaving timing. The 0.1.3 fix is replay-tested and awaits client confirmation.

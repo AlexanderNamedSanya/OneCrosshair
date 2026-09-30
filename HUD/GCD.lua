@@ -36,15 +36,20 @@ function O.GCD.Read(self)
         self.progress = O.Clamp(1 - bestRemaining / bestDuration)
     end
     -- Derived readiness, not an advertised server-side "optimal weave" event:
-    -- a live ability GCD overlaps a currently usable, non-cooling light attack.
+    -- a live ability GCD overlaps a currently usable light attack.
     -- No percentage, latency fudge or fixed-duration timer is involved.
-    -- Keep the 0.1.1 conjunction until a real-client capture identifies its
-    -- failing gate. Independent reads are diagnostic, not a guessed fix.
+    -- Client trace: slot 1 mirrors the ability GCD even after its state failure
+    -- clears. Only an explicitly matching ability-global timer is exempted;
+    -- unrelated or local weapon cooldowns still block readiness.
     if self.active then
         self.la = ReadLightAttackState()
         local la = self.la
+        la.sharedGCD = la.global == true
+            and (la.globalSlotType == ACTION_TYPE_ABILITY or la.globalSlotType == ACTION_TYPE_CRAFTED_ABILITY)
+            and la.duration == self.duration and la.remaining == self.remaining
+        la.cooldownClear = la.remaining ~= nil and (la.remaining <= 0 or la.sharedGCD)
         self.ready = la.available and la.used and la.usable and not la.failure
-            and la.remaining ~= nil and la.remaining <= 0 or false
+            and la.cooldownClear or false
     end
     O.GCDDiagnostics.Capture(self)
     return self

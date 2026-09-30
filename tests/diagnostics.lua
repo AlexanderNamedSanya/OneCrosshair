@@ -7,6 +7,31 @@ local function setup()
     T.emptyWeapon, T.weaponUsable, T.weaponFailure = false, true, false
     T.cooldowns = {[3]={700,1000,true,ACTION_TYPE_ABILITY}, [1]={20,100,false,ACTION_TYPE_ABILITY}}
 end
+test("client trace replay: shared GCD stops blocking once state failure clears", function()
+    setup()
+    local g = O.GCD.New()
+    local remaining = {966,866,833,733,633,533,433,333,233,133,33,0,1000,900,800,700}
+    for i,ms in ipairs(remaining) do
+        T.weaponFailure = i <= 2
+        T.cooldowns = {[3]={ms,1000,true,ACTION_TYPE_ABILITY},[1]={ms,1000,true,ACTION_TYPE_ABILITY}}
+        O.GCD.Read(g)
+        assert(g.ready == (i >= 3 and ms > 0), "trace row " .. i)
+        local fill,color,intensity = O.GCD.Presentation(g)
+        if g.ready then assert(fill == 1 and color == O.GCD.readyColor and intensity == 1) end
+        if ms == 0 then assert(color == O.GCD.idleColor and intensity == .25) end
+    end
+end)
+test("only matching ability-global cooldown is exempt, other gates remain required", function()
+    setup(); local g = O.GCD.New()
+    local rejected = {{700,1000,false,ACTION_TYPE_ABILITY}, {700,1000,true,ACTION_TYPE_ITEM},
+        {600,1000,true,ACTION_TYPE_ABILITY}, {700,1200,true,ACTION_TYPE_ABILITY}, {}}
+    for _,cd in ipairs(rejected) do T.cooldowns[1]=cd; O.GCD.Read(g); assert(not g.ready) end
+    T.cooldowns[1]={700,1000,true,ACTION_TYPE_ABILITY}
+    T.emptyWeapon=true; O.GCD.Read(g); assert(not g.ready)
+    T.emptyWeapon=false; T.weaponUsable=false; O.GCD.Read(g); assert(not g.ready)
+    T.weaponUsable=true; T.weaponFailure=true; O.GCD.Read(g); assert(not g.ready)
+    T.weaponFailure=false; O.GCD.Read(g); assert(g.ready)
+end)
 test("temporary diagnostics are off by default and silent during normal play", function()
     setup(); assert(not D.enabled)
     local g = O.GCD.New()
