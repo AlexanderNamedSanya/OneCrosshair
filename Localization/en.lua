@@ -6,7 +6,7 @@ local strings = {
     ALWAYS = "Always", COMBAT_ONLY = "Combat Only", DYNAMIC = "Dynamic", OFF = "Off",
     EFFECTS = "Effects", LOW_RESOURCE = "Low Resource Warning", CRITICAL_STATE = "Critical State",
     SHIELD = "Shield", HEAVY_CHANNEL = "Heavy Attack / Channel Progress", COMBAT_FEEDBACK = "Combat Feedback",
-    TIMING_LIMITATION = "Currently unavailable: a reliable active Heavy Attack / Channel timing and cancellation source has not been verified for this API version.",
+    TIMING_DESCRIPTION = "Shows estimated Heavy Attack, cast and channel progress. Interrupted actions return to the current GCD. Some special abilities may not provide reliable timing events.",
 }
 for key, value in pairs(strings) do
     local id = "SI_ONECROSSHAIR_" .. key

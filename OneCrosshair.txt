@@ -1,7 +1,7 @@
 ## Title: OneCrosshair
 ## Description: Contextual crosshair and fixed resource ring.
 ## Author: OneCrosshair
-## Version: 0.1.4
+## Version: 0.1.5
 ## APIVersion: 101051
 ## SavedVariables: OneCrosshairSavedVariables
 ## DependsOn: LibAddonMenu-2.0
@@ -26,6 +26,7 @@ HUD/GCDDiagnostics.lua
 HUD/GCD.lua
 Effects/LowResource.lua
 Effects/CriticalState.lua
+Effects/HeavyChannelData.lua
 Effects/HeavyChannel.lua
 Effects/CombatFeedback.lua
 Preview/Preview.lua

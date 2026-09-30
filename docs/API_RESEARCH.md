@@ -1,6 +1,10 @@
 # API research and verification
 
-## Current result: 0.1.4 ping-zone cue
+## Current result: 0.1.5 Heavy/Channel adaptation
+
+Normal GCD/weaving 0.1.4 is confirmed in-game and unchanged. See [HEAVY_CHANNEL_REFERENCE.md](HEAVY_CHANNEL_REFERENCE.md) for the complete CombatMetronome execution audit, A/B/C/D/E classification and native implementation. Event-derived starts and cancellation plus finite expiry replace the old intentionally unavailable provider. Four reference result globals absent from this API snapshot are nil-guarded and explicitly reported by diagnostics; no numeric enum guesses. Earlier API-only findings below remain historical evidence, not the current feature status.
+
+## Confirmed 0.1.4 ping-zone cue
 
 See [WEAVING_REFERENCE.md](WEAVING_REFERENCE.md). Public `GetLatency()` supplies the current millisecond lead, capped at 150. Existing global cooldown detection remains. Slot usability is diagnostic only. The historical 0.1.3 model below was rejected because it turns green too early.
 
@@ -91,7 +95,7 @@ While this GCD is active, slot 1 must pass all of `IsSlotUsed`, `IsSlotUsable`, 
 | `EVENT_ACTION_SLOT_STATE_UPDATED`, `EVENT_ACTION_UPDATE_COOLDOWNS`, `EVENT_ACTION_SLOTS_ACTIVE_HOTBAR_UPDATED` | Slot state/cooldown/bar changes | No complete active cast record, charge duration or universal interruption semantics |
 | Native `PrepareAttack` / `PerformAttack`, animation facilities | Private input entry points; public animation facilities animate addon UI controls | Button edges do not prove accepted gameplay state; no verified public player charge/animation-progress reader. No hooks or overrides of private gameplay functions added |
 
-**Decision:** keep Heavy/Channel intentionally unavailable and retain the localized tooltip. A reliable narrower alternative could be an explicitly verified per-ability effect/ combat-event mapping, or a supported library that guarantees start, current timing, voluntary cancellation, interruption and end across the required weapons/skills. Current evidence does not establish that guarantee; timeouts or metadata timers would produce false progress after cancellation. The existing provider boundary and gray-over-green priority remain tested but do not imply native functionality.
+**Historical 0.1.1 decision (superseded by the explicit heuristic/reference adaptation in 0.1.5):** keep Heavy/Channel intentionally unavailable and retain the localized tooltip. A reliable narrower alternative could be an explicitly verified per-ability effect/ combat-event mapping, or a supported library that guarantees start, current timing, voluntary cancellation, interruption and end across the required weapons/skills. Current evidence does not establish that guarantee; timeouts or metadata timers would produce false progress after cancellation. The existing provider boundary and gray-over-green priority remain tested but do not imply native functionality.
 
 ### Follow-up validation
 

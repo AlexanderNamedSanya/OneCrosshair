@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.4 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.5 targets the inspected ESO UI API **101051**.
 
 ## Installation
 
@@ -17,8 +17,8 @@ Dot with interpolated Normal/Target/Block geometry; combat red and normal white;
 ## Explicit API limitations
 
 - **Pursuit yellow**: no reliable general pursuit state was verified; the renderer supports yellow but the detector does not guess it from hostile targets or combat.
-- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md) and [diagnostics](docs/GCD_DIAGNOSTICS.md). Client verification remains necessary.
-- **Heavy/Channel progress**: setting and presentation integration exist, but no built-in timing provider is enabled. Tooltip cast durations do not establish actual start/cancel/release. No simulated progress is shown.
+- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md) and [diagnostics](docs/GCD_DIAGNOSTICS.md). Normal GCD/weaving is confirmed working in-game.
+- **Heavy/Channel progress**: enabled through the existing setting; event-derived finite charge/cast/channel progress temporarily owns the gray bottom bar and restores current GCD/idle on termination. Uses narrow CombatMetronome mechanisms without a dependency. [Algorithm, exceptions and limitations](docs/HEAVY_CHANNEL_REFERENCE.md); real weapon/ability cancellation still needs client validation.
 - **Combat feedback**: a direct damage result must match recent player action evidence. Periodic results, incoming damage, uncorrelated procs and healing do not trigger it. Abilities with differing slot/impact IDs may be intentionally missed; delayed impacts after 1.5 s are ignored. This evidence window is not a GCD timer.
 
 See [API research](docs/API_RESEARCH.md) for sources and the required client test matrix. This repository was checked with a mocked ESO environment running real Lua 5.1; **in-client compatibility and visual quality still need validation**.

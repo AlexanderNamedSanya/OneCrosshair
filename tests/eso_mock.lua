@@ -66,8 +66,8 @@ function GetSlotBoundId(slot) return T.ids[slot] or 0 end
 function IsSlotUsed(slot) return T.ids[slot] ~= nil and not T.emptyWeapon end
 function IsSlotUsable(slot) return T.weaponUsable == true end
 function ActionSlotHasNonCostStateFailure(slot) return T.weaponFailure == true end
-function GetSlotType(slot) return ACTION_TYPE_ABILITY end
-function GetActiveHotbarCategory() return 0 end
+function GetSlotType(slot) return T.slotTypes and T.slotTypes[slot] or ACTION_TYPE_ABILITY end
+function GetActiveHotbarCategory() return T.hotbar or 0 end
 SLASH_COMMANDS = {}
 T.chat = {}
 function d(message) T.chat[#T.chat + 1] = message end
@@ -96,3 +96,24 @@ CALLBACK_MANAGER = { handlers = {} }
 function CALLBACK_MANAGER:RegisterCallback(name,fn) self.handlers[name] = fn end
 
 function GetLatency() return T.latency end
+
+-- Heavy/channel reference event contract; values are mock-only, not ESO IDs.
+EVENT_ACTION_UPDATE_COOLDOWNS, EVENT_EFFECT_CHANGED = 20, 21
+EVENT_ACTION_SLOTS_ACTIVE_HOTBAR_UPDATED, EVENT_WEAPON_PAIR_LOCK_CHANGED = 22, 23
+EVENT_PLAYER_DEAD, EVENT_MOUNTED_STATE_CHANGED = 24, 25
+EFFECT_RESULT_GAINED, EFFECT_RESULT_UPDATED, EFFECT_RESULT_FADED = 1, 2, 3
+ACTION_RESULT_BEGIN, ACTION_RESULT_BEGIN_CHANNEL = 100, 101
+ACTION_RESULT_EFFECT_GAINED, ACTION_RESULT_EFFECT_FADED = 102, 103
+ACTION_RESULT_KNOCKBACK, ACTION_RESULT_PACIFIED, ACTION_RESULT_STAGGERED = 104, 105, 106
+ACTION_RESULT_STUNNED, ACTION_RESULT_INTERRUPT, ACTION_RESULT_FEARED, ACTION_RESULT_LEVITATED = 107, 108, 109, 110
+ACTION_RESULT_FAILED, ACTION_RESULT_FAILED_REQUIREMENTS, ACTION_RESULT_ABILITY_ON_COOLDOWN = 111, 112, 113
+ACTION_RESULT_INSUFFICIENT_RESOURCE, ACTION_RESULT_SILENCED, ACTION_RESULT_TARGET_DEAD = 114, 115, 116
+ACTION_RESULT_NO_LOCATION_FOUND, ACTION_RESULT_IMMUNE, ACTION_RESULT_CASTER_DEAD = 117, 118, 119
+ACTION_RESULT_DIED, ACTION_RESULT_DIED_XP = 120, 121
+function GetAbilityCastInfo(id) local info = T.castInfo and T.castInfo[id]; if info then return unpack(info) end; return false, 0 end
+function GetAbilityIdForCraftedAbilityId(id) return T.crafted and T.crafted[id] or 0 end
+function IsSlotToggled(slot) return T.toggled == slot end
+function IsMounted() return T.mounted or false end
+function ArePlayerWeaponsSheathed() return T.sheathed or false end
+function GetNumBuffs(tag) return T.crux and 1 or 0 end
+function GetUnitBuffInfo(tag,index) return "Crux",0,0,1,T.crux,"","",0,0,0,184220 end

@@ -14,6 +14,7 @@ function O.Runtime.New(settings)
     self.ring = O.ResourceRing.New(self.root)
     O.ReticleReplacement.Initialize()
     O.CombatFeedback.Initialize(settings, self.crosshair)
+    O.HeavyChannel.Initialize(settings)
     EVENT_MANAGER:RegisterForEvent(O.name .. "Activated", EVENT_PLAYER_ACTIVATED, function()
         self.active = true
         self.visibility = O.VisibilityController.New()
@@ -36,6 +37,7 @@ function O.Runtime.Update(self)
     self.root:SetHidden(not visible)
     O.ReticleReplacement.SetActive(visible)
     if not visible then
+        O.HeavyChannel.Read(s.heavyChannel, now) -- maintain termination while HUD is hidden
         self.gcd = O.GCD.New()
         return
     end
@@ -57,8 +59,8 @@ function O.Runtime.Update(self)
     end
     O.ResourceRing.Draw(self.ring, "shield", O.Shield.Read(self.shield, self.health.maximum, now),
         O.Shield.color, s.shield and healthAlpha or 0, false)
-    local gcd = O.GCD.Read(self.gcd)
     local heavy = O.HeavyChannel.Read(s.heavyChannel, now)
+    local gcd = O.GCD.Read(self.gcd)
     local active = heavy ~= nil or (s.gcd and gcd.active)
     local alpha = O.VisibilityController.Alpha(self.visibility, "bottom", s.visibility,
         s.gcd or heavy ~= nil, state.combat, active, now) * s.hudOpacity

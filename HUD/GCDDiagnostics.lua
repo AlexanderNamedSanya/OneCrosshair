@@ -22,6 +22,11 @@ function D.Capture(gcd)
     Expire(now)
     if not D.enabled then return end
     local la = gcd.la or {}
+    local timing = O.HeavyChannel and O.HeavyChannel.state or {}
+    local timingActive = timing.active and O.settings.heavyChannel
+    local owner = timingActive and timing.kind or (O.settings.gcd and gcd.active and "gcd" or "idle")
+    local observedActive = gcd.active or timingActive
+    Count("heavyChannel", timingActive)
     if gcd.active then
         Count("active", true)
         Count("ready", gcd.ready)
@@ -30,14 +35,18 @@ function D.Capture(gcd)
     end
     local key = table.concat({ tostring(gcd.active), tostring(gcd.ready), tostring(la.available),
         tostring(la.used), tostring(la.usable), tostring(la.failure),
-        tostring(gcd.cycle), tostring(la.global), tostring(la.globalSlotType) }, ":")
+        tostring(gcd.cycle), owner, tostring(O.HeavyChannel and O.HeavyChannel.serial), tostring(la.global), tostring(la.globalSlotType) }, ":")
     -- Periodic active samples plus input/cycle changes and a single completion row.
-    if key == D.lastKey and (not gcd.active or now - D.lastAt < INTERVAL) then return end
-    if not gcd.active and not D.wasActive then return end
-    D.wasActive, D.lastKey, D.lastAt = gcd.active, key, now
+    if key == D.lastKey and (not observedActive or now - D.lastAt < INTERVAL) then return end
+    if not observedActive and not D.wasActive then return end
+    D.wasActive, D.lastKey, D.lastAt = observedActive, key, now
     local row = { time = now - D.start, active = gcd.active, ready = gcd.ready,
         gcdRemaining = gcd.remaining, gcdDuration = gcd.duration, sourceSlot = gcd.sourceSlot,
-        latency = gcd.latency, lead = gcd.lead, cycle = gcd.cycle, la = la }
+        latency = gcd.latency, lead = gcd.lead, cycle = gcd.cycle, la = la,
+        owner = owner, progress = timingActive and timing.progress or (gcd.ready and 1 or gcd.progress),
+        timingId = timing.abilityId, timingDuration = timing.duration, timingSource = timing.source,
+        timingStart = timing.startMs, timingEnd = timing.endMs, timingReason = timing.reason,
+        timingStopped = timing.stoppedAt }
     if GetSlotBoundId then row.ability = GetSlotBoundId(1) end
     if GetSlotType then row.slotType = GetSlotType(1) end
     if GetActiveHotbarCategory then row.hotbar = GetActiveHotbarCategory() end
@@ -46,7 +55,7 @@ function D.Capture(gcd)
 end
 local function Summary()
     local parts = {}
-    for _, key in ipairs({ "active", "ready", "waiting", "latencyMissing" }) do
+    for _, key in ipairs({ "active", "ready", "waiting", "latencyMissing", "heavyChannel" }) do
         parts[#parts + 1] = key .. "=" .. (D.counts[key] or 0)
     end
     Print("recording=" .. tostring(D.enabled) .. " rows=" .. #D.rows .. " frames: " .. table.concat(parts, " "))
@@ -58,7 +67,9 @@ SLASH_COMMANDS["/ocgcd"] = function(command)
         D.rows, D.counts = {}, {}
         D.start, D.lastAt, D.lastKey, D.wasActive = GetFrameTimeMilliseconds(), 0, nil, false
         D.enabled = true
-        Print("START 15s; ping-zone; slot1 observational; memory-only; /ocgcd off; /ocgcd summary; /ocgcd 1")
+        Print("START 15s; memory-only; /ocgcd off | summary | <page>; timing result globals BEGIN/CHANNEL/GAINED/FADED="
+            .. tostring(ACTION_RESULT_BEGIN ~= nil) .. "/" .. tostring(ACTION_RESULT_BEGIN_CHANNEL ~= nil)
+            .. "/" .. tostring(ACTION_RESULT_EFFECT_GAINED ~= nil) .. "/" .. tostring(ACTION_RESULT_EFFECT_FADED ~= nil))
     elseif command == "off" then
         Stop("manual")
     elseif command == "summary" then
@@ -73,11 +84,13 @@ SLASH_COMMANDS["/ocgcd"] = function(command)
         for i = (page - 1) * PAGE + 1, math.min(page * PAGE, #D.rows) do
             local row = D.rows[i]
             local s = row.la
-            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s ping=%s lead=%s cycle=%s id=%s type=%s bar=%s",
+            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s ping=%s lead=%s cycle=%s id=%s type=%s bar=%s owner=%s progress=%s timingId=%s duration=%s timingSource=%s start=%s end=%s reason=%s stopped=%s",
                 i, row.time, tostring(row.active), tostring(row.ready), tostring(row.gcdRemaining), tostring(row.gcdDuration),
                 tostring(row.sourceSlot), tostring(s.available), tostring(s.used), tostring(s.usable), tostring(s.failure),
                 tostring(s.remaining), tostring(s.duration), tostring(s.global), tostring(s.globalSlotType), tostring(row.latency), tostring(row.lead), tostring(row.cycle),
-                tostring(row.ability), tostring(row.slotType), tostring(row.hotbar)))
+                tostring(row.ability), tostring(row.slotType), tostring(row.hotbar), row.owner, tostring(row.progress),
+                tostring(row.timingId), tostring(row.timingDuration), tostring(row.timingSource), tostring(row.timingStart),
+                tostring(row.timingEnd), tostring(row.timingReason), tostring(row.timingStopped)))
         end
     end
 end
