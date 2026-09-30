@@ -62,3 +62,7 @@ Rays uses three original whole-state textures and the existing 250 ms alpha inte
 The ESO preset has `native = true`. Runtime releases decorative-reticle replacement and hides only its custom crosshair root, leaving the resource ring active. ESO owns its appearance, targeting animation, impactful-hit feedback and stealth/disguise visibility. This mode does not apply OneCrosshair opacity/color/feedback to the native control; the crosshair-opacity slider is disabled. Switching back reacquires replacement normally. No native API/method is overridden.
 
 The isolated ESO preview uses the first and last cells of the game's 16-cell `EsoUI/Art/Reticle/reticleAnim.dds`, at its native 64x64 control size. Block has no separate vanilla shape, so its preview shows the normal endpoint. The preview does not change the live reticle. Sources: [reticle.xml](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.xml), [reticle.lua](https://github.com/esoui/esoui/blob/live/esoui/ingame/reticle/reticle.lua).
+
+## Crosshair scale (0.1.9)
+
+CrosshairController applies a fixed root scale of 2 to custom presets and 1 to native ESO preview. This doubles textures, spacing and positional feedback together; the existing scale-pulse multiplier composes with that base. Gameplay and preview share this renderer. ResourceRing is a sibling control and is unaffected. Preset data remains in its original design coordinates. No hit-color flash was implemented; the interrupted request was cancelled before any code changes.

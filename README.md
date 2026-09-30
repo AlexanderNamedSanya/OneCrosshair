@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four configurable resource arcs. Version 0.1.8 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four configurable resource arcs. Version 0.1.9 targets the inspected ESO UI API **101051**.
 
 ## Installation
 

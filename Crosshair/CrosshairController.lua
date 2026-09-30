@@ -33,7 +33,9 @@ function O.CrosshairController.Update(self, state, opacity, now, immediate)
     local elapsed = self.pulseStart and now - self.pulseStart or 130
     local pulse = elapsed < 130 and math.sin(math.pi * elapsed / 130) or 0
     self.root:SetAlpha(opacity)
-    self.root:SetScale(self.preset.combatFeedback and 1 or 1 + .12 * pulse)
+    -- Scale the complete custom crosshair, including spacing and feedback.
+    local baseScale = self.preset.native and 1 or 2
+    self.root:SetScale(baseScale * (self.preset.combatFeedback and 1 or 1 + .12 * pulse))
     for i, element in ipairs(self.elements) do
         local p = self.preset.states[state.geometry][i] or { alpha = 0 }
         for _, key in ipairs({ "x", "y", "alpha", "rotation" }) do
