@@ -22,7 +22,7 @@ Animated crosshair presets with a contextual resource ring and a Light Attack we
 
 ## Fixed release appearance
 
-The five appearance sliders remain visible but locked. Edit the commented values in `Core/Config.lua`, then `/reloadui`:
+All appearance sliders have been removed from the in-game settings. Edit the commented values in `Core/Config.lua`, then `/reloadui`:
 
 | Value | Release setting |
 | --- | --- |

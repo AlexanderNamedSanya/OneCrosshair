@@ -1,7 +1,7 @@
 local O = OneCrosshair
 -- Release appearance captured from saved settings for 1.0.
 -- EDIT HERE, then /reloadui. Values override old SavedVariables.
--- Меняйте оформление здесь; ползунки в клиенте заблокированы.
+-- Меняйте оформление здесь; ползунки из клиента удалены.
 O.Config = {
     resourceLength = 90,        -- Arc length, percent of each quadrant (0..100).
     resourceRadius = 45.25,     -- Ring radius in ESO UI units (20..100).

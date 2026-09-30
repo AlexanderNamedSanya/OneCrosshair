@@ -116,15 +116,13 @@ test("saved settings retire old switches and apply locked release appearance", f
     assert(s.criticalState==nil and s.heavyChannel==nil and not s.gcd)
     close(s.resourceThickness,5); close(s.resourceLength,90); close(s.resourceRadius,45.25)
 end)
-test("geometry controls stay locked while feature controls refresh preview", function()
+test("appearance sliders are absent while feature controls refresh preview", function()
     local found=0
     for _,option in ipairs(LibAddonMenu2.options) do
-        if option.name==GetString(SI_ONECROSSHAIR_RESOURCE_LENGTH) then
-            local before=O.Preview.examples[1].ring.length
-            assert(option.disabled()); option.setFunc(85); close(O.Preview.examples[1].ring.length,before); found=found+1
-        elseif option.name==GetString(SI_ONECROSSHAIR_GCD) then
+        assert(option.type~="slider")
+        if option.name==GetString(SI_ONECROSSHAIR_GCD) then
             option.setFunc(true); assert(O.Preview.examples[1].ring.arcs.bottom.alpha>0); found=found+1
         end
     end
-    assert(found==2)
+    assert(found==1)
 end)

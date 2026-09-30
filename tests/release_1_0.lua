@@ -6,18 +6,11 @@ local function color(r,g,b,a)
     close(cr,r); close(cg,g); close(cb,b); close(ca,a)
 end
 
-test("release metadata and five saved appearance values are locked in UI", function()
+test("release metadata and fixed appearance remain while UI has no sliders", function()
     assert(O.version=="1.0" and O.author=="oneDOK" and LibAddonMenu2.data.author=="oneDOK")
     close(O.settings.resourceLength,90); close(O.settings.resourceRadius,45.25)
     close(O.settings.resourceThickness,5); close(O.settings.crosshairOpacity,.65); close(O.settings.hudOpacity,.5)
-    local count=0
-    for _,option in ipairs(LibAddonMenu2.options) do
-        if option.type=="slider" then
-            assert(option.disabled()); local before=option.getFunc()
-            option.setFunc(before+1); close(option.getFunc(),before); count=count+1
-        end
-    end
-    assert(count==5)
+    for _,option in ipairs(LibAddonMenu2.options) do assert(option.type~="slider") end
 end)
 
 test("code config overrides old appearance while preserving other saved choices", function()

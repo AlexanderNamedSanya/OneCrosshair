@@ -10,7 +10,7 @@ Choose from five presets: Dot, Large Dots, Rays, Diamonds, or the original ESO c
 
 The surrounding bars show Health, Magicka and Stamina, with an optional shield overlay and outward low-resource warnings. The bottom bar displays GCD, Heavy Attack and finite cast/channel progress. Its green cue helps time your next Light Attack using a capped latency estimate.
 
-Includes English and Russian translations, account-wide preferences and a live settings preview of the enabled bars. Preset, visibility and feature switches are available in-game. Appearance sliders are locked in 1.0; advanced users can edit the commented Core/Config.lua values and reload the interface.
+Includes English and Russian translations, account-wide preferences and a live settings preview of the enabled bars. Preset, visibility and feature switches are available in-game. Appearance sliders are absent in 1.0; advanced users can edit the commented Core/Config.lua values and reload the interface.
 
 Install LibAddonMenu-2.0, extract the OneCrosshair folder into live/AddOns and run /reloadui. No other combat addon is required.
 
@@ -33,10 +33,10 @@ OneCrosshair объединяет прицел и основные боевые 
 - First publication release, author oneDOK.
 - Dot and Large Dots reduced to half their previous diameter; small-dot spacing increased 25%.
 - Captured appearance: arc length 90%, radius 45.25, thickness 5, custom crosshair opacity 65%, HUD opacity 50%.
-- Five appearance controls locked in-game; manual values documented in Core/Config.lua.
+- Five appearance controls removed from the in-game settings; manual values documented in Core/Config.lua.
 - Combat color added to the native ESO crosshair with cleanup on UI/preset changes.
 - Existing five presets, animations, resource warnings and weaving timing retained.
 
 ## Validation before upload
 
-Automated checks pass (87 behavior scenarios, seven locales, API symbols); ZIP entries are compared byte-for-byte with runtime source. In-game final smoke test: reload, all five presets, target/block animations, both dot sizes, native combat entry/exit and hit, menus/stealth, locked sliders, bars and GCD/channel cue. The ZIP excludes development tools, reference addons, dependencies and SavedVariables. Capture gameplay screenshots for the publication page after the client check; offline mock images are not gameplay evidence.
+Automated checks pass (87 behavior scenarios, seven locales, API symbols); ZIP entries are compared byte-for-byte with runtime source. In-game final smoke test: reload, all five presets, target/block animations, both dot sizes, native combat entry/exit and hit, menus/stealth, absence of sliders, bars and GCD/channel cue. The ZIP excludes development tools, reference addons, dependencies and SavedVariables. Capture gameplay screenshots for the publication page after the client check; offline mock images are not gameplay evidence.

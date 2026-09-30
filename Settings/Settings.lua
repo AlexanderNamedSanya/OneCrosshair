@@ -52,14 +52,6 @@ function O.Settings.Initialize(s)
     add({ type = "dropdown", name = text("PRESET"), choices = choices, choicesValues = values,
         getFunc = function() return s.preset end,
         setFunc = function(value) s.preset = value; O.Preview.Refresh() end })
-    header("APPEARANCE")
-    for _, item in ipairs({ { "crosshairOpacity", "CROSSHAIR_OPACITY" }, { "hudOpacity", "HUD_OPACITY" } }) do
-        local key = item[1]
-        add({ type = "slider", name = text(item[2]), min = 0, max = 100, step = 1,
-            getFunc = function() return s[key] * 100 end,
-            disabled = function() return true end, tooltip = text("LOCKED_APPEARANCE"),
-            setFunc = function() end })
-    end
     header("HUD")
     checkbox("resources", "RESOURCES")
     checkbox("gcd", "GCD")
@@ -67,14 +59,6 @@ function O.Settings.Initialize(s)
         choices = { text("ALWAYS"), text("COMBAT_ONLY"), text("DYNAMIC"), text("OFF") },
         choicesValues = { "ALWAYS", "COMBAT_ONLY", "DYNAMIC", "OFF" },
         getFunc = function() return s.visibility end, setFunc = function(value) s.visibility = value; O.Preview.Refresh() end })
-    header("RESOURCE_GEOMETRY")
-    for _, item in ipairs({ {"resourceThickness", "RESOURCE_THICKNESS", 1, 12, .5},
-        {"resourceLength", "RESOURCE_LENGTH", 0, 100, 1}, {"resourceRadius", "RESOURCE_RADIUS", 20, 100, .25} }) do
-        local key = item[1]
-        add({ type = "slider", name = text(item[2]), min = item[3], max = item[4], step = item[5],
-            getFunc = function() return s[key] end, disabled = function() return true end,
-            tooltip = text("LOCKED_APPEARANCE"), setFunc = function() end })
-    end
     header("EFFECTS")
     checkbox("lowResource", "LOW_RESOURCE")
     checkbox("shield", "SHIELD")
