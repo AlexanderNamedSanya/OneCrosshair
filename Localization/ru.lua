@@ -1,4 +1,5 @@
 local strings = {
+    PRESET_LARGE_DOT = "Крупные точки (×5)",
     PRESET_RAYS = "Лучи", PRESET_DIAMONDS = "Ромбы", PRESET_ESO = "Стандартный ESO",
     PRESET_DOT = "Точка", NORMAL = "Обычный", TARGET = "Цель", BLOCK = "Блок",
     CROSSHAIR = "Прицел", PRESET = "Пресет", APPEARANCE = "Внешний вид",

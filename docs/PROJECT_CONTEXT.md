@@ -11,7 +11,11 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 - Automatic isolated three-state settings preview and reversible vanilla decorative-reticle hiding.
 - Lua 5.1 mock contract suite, engine-symbol checks against inspected documentation, deterministic DDS generation.
 
-## Current release: 0.1.10
+## Current release: 0.1.11
+
+Added the independent Large Dots (5x) preset at the user’s final requested multiplier: 30 UI-unit diameter versus current Dot’s 6. Target/Block positions are spread enough to keep the enlarged dots distinct. Existing presets and default selection remain unchanged. Existing animation, preview and feedback are reused.
+
+## Previous release: 0.1.10
 
 Rays now unfolds and rearranges six persistent line segments between Normal/Target/Block instead of crossfading whole silhouettes. Existing Dot/Diamonds point motion and the 2x custom size remain. Native ESO remains untouched; red hit flash remains cancelled. Texture and line control pools are separate and reused across switches. The three retired Rays DDS files are explicitly removed on deployment.
 

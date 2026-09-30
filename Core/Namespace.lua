@@ -1,4 +1,4 @@
-OneCrosshair = { name = "OneCrosshair", version = "0.1.10" }
+OneCrosshair = { name = "OneCrosshair", version = "0.1.11" }
 local O = OneCrosshair
 function O.Clamp(value) return math.max(0, math.min(1, value or 0)) end
 function O.Control(parent, kind)

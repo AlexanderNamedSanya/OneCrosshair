@@ -1,4 +1,5 @@
 local strings = {
+    PRESET_LARGE_DOT = "Large Dots (5x)",
     PRESET_RAYS = "Rays", PRESET_DIAMONDS = "Diamonds", PRESET_ESO = "ESO Default",
     PRESET_DOT = "Dot", NORMAL = "Normal", TARGET = "Target", BLOCK = "Block",
     CROSSHAIR = "Crosshair", PRESET = "Preset", APPEARANCE = "Appearance",

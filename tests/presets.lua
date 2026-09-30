@@ -2,15 +2,15 @@ local O = OneCrosshair
 local function test(name,fn) fn(); print("PASS "..name) end
 local function close(a,b) assert(math.abs(a-b)<.001) end
 
-test("four presets are selectable with stable IDs and existing Dot default", function()
-    assert(#O.PresetRegistry.list==4 and O.Settings.defaults.preset=="dot")
-    for _,id in ipairs({"dot","rays","diamonds","eso"}) do
+test("five presets are selectable with stable IDs and existing Dot default", function()
+    assert(#O.PresetRegistry.list==5 and O.Settings.defaults.preset=="dot")
+    for _,id in ipairs({"dot","large_dot","rays","diamonds","eso"}) do
         assert(O.PresetRegistry.Get(id).id==id)
     end
     local count=0
     for _,option in ipairs(LibAddonMenu2.options) do
         if option.name==GetString(SI_ONECROSSHAIR_PRESET) then
-            assert(#option.choicesValues==4)
+            assert(#option.choicesValues==5)
             for _,id in ipairs(option.choicesValues) do
                 option.setFunc(id)
                 for _,example in ipairs(O.Preview.examples) do assert(example.crosshair.preset.id==id) end
@@ -18,7 +18,7 @@ test("four presets are selectable with stable IDs and existing Dot default", fun
             end
         end
     end
-    assert(count==4)
+    assert(count==5)
 end)
 
 test("reference presets display their three states and interpolate transitions", function()

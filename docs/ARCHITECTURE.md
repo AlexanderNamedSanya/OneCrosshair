@@ -70,3 +70,7 @@ CrosshairController applies a fixed root scale of 2 to custom presets and 1 to n
 ## Geometric transitions (0.1.10)
 
 Rays interpolates both endpoints over the existing 250 ms smoothstep. Normal has three overlapping pairs (one arm per pair hidden); Target opens both arms; Block moves persistent corners through a 60-degree triangular reorientation instead of sending opposite vertices through the center. Retargeting reads the current interpolated endpoints, so rapid target/block/release transitions stay continuous. Dot and Diamonds already move their persistent elements with this same animator and retain that behavior. The preview continues showing the three final states. No extra update loop, timing setting, native ESO animation change or red hit flash. Retired whole-state Rays DDS files are removed by the deployment allowlist.
+
+## Large Dots (0.1.11)
+
+`large_dot` is an independent preset reusing Disc.dds and the existing three-element animation/feedback contract. Its 15-unit design dots render at 30 UI units with the existing 2x root scale: five times the current Dot diameter. Target/Block spacing is increased to keep the larger dots separate. Existing Dot/default and other presets are unchanged.
