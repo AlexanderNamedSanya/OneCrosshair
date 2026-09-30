@@ -11,24 +11,21 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 - Automatic isolated three-state settings preview and reversible vanilla decorative-reticle hiding.
 - Lua 5.1 mock contract suite, engine-symbol checks against inspected documentation, deterministic DDS generation.
 
-## Known incomplete behaviors
+## Accepted runtime behavior and current release (0.1.6)
 
-General pursuit detection remains inactive. Critical Health and normal GCD/weaving are confirmed in-game by the user. Heavy/Channel 0.1.5 is implemented from CombatMetronome event/heuristic paths with finite termination and cancellation coverage; client verification remains necessary for actual weapon/ability event semantics.
+The user accepted 0.1.5 in the ESO client: Heavy start/progress/full completion/early release/Block/Dodge; Channel start/progress/normal completion, movement without false cancellation, Block/Dodge; and bottom ownership/restoration. Critical Health and normal GCD/weaving are also confirmed. General pursuit detection remains inactive. Finite timing is still derived from events/API metadata/heuristics, not an authoritative universal progress API.
 
-## Current implementation (0.1.5)
-
-Native Heavy/cast/channel ownership lives in Effects/HeavyChannel.lua with a small separate data module. Finite API duration plus verified-style reference start signals drive gray center-out progress. Cancellation, release and timeout reveal current GCD without resetting it. Existing setting now controls the feature; updated tooltip describes estimates. `/ocgcd` includes owner lifecycle and reference-result-global availability. See HEAVY_CHANNEL_REFERENCE.md for full audit, exclusions and client matrix. Normal GCD source and its existing tests remain unchanged.
+This cleanup removes the temporary diagnostic module, slash command, capture/history/paging/chat output, slot-1 observations, diagnostic cycle counter and Heavy source/reason/serial snapshots. Heavy/Channel is a supported On/Off feature without a warning tooltip. The user explicitly approved one full-green Heavy completion frame; early cancellation has none. Channel/Cast never gains a hold. Timing intervals, detection/cancellation paths and normal GCD threshold are unchanged. See CLEANUP_0_1_6.md for release details and HEAVY_CHANNEL_REFERENCE.md for useful reference research.
 
 ## Previous fix (0.1.4, now confirmed in-game)
 
-Replaced 0.1.3's incorrect “LA currently usable” model with CombatMetronome 1.7.7's ping-zone heuristic: remaining GCD <= min(GetLatency(), 150 ms). Entire bottom bar becomes green and latches to this observed cycle; completion restores idle and a renewed timer starts gray. Previous LA events and slot-1 availability do not shift the threshold. Runtime clears stale latch state when hidden/deactivated. No reference dependency, settings or SavedVariables changes. See WEAVING_REFERENCE.md for execution trace, constants, limitations and timeline. `/ocgcd` now records ping, lead and cycle alongside raw LA observations. Regression suite includes the supplied trace, thresholds, latency changes, consecutive cycles and lifecycle.
+Replaced 0.1.3's incorrect â€œLA currently usableâ€ model with CombatMetronome 1.7.7's ping-zone heuristic: remaining GCD <= min(GetLatency(), 150 ms). Entire bottom bar becomes green and latches to this observed cycle; completion restores idle and a renewed timer starts gray. Previous LA events and slot-1 availability do not shift the threshold. Runtime clears stale latch state when hidden/deactivated. No reference dependency, settings or SavedVariables changes. See WEAVING_REFERENCE.md for execution trace, constants, limitations and timeline. The temporary trace probe used to verify this behavior was removed in 0.1.6. Regression suite includes the supplied trace, thresholds, latency changes, consecutive cycles and lifecycle.
 
 ## Previous follow-up (0.1.2)
 
 - Centralized ResourceRing geometry: mean radius 32.5 -> 42.25 (+30%), equal horizontal/vertical radii instead of 36/29; stroke 2 -> 4, shield 4 -> 6, glow diameter 9 -> 11. Four separate bars, fill directions and Dot are preserved.
-- Temporary `/ocgcd on`, `off`, `summary`, and numeric page commands capture all readiness operands independently. No additional settings, SavedVariables fields, localization changes, events, or update registrations.
+- A temporary memory-only trace probe helped establish the client cooldown semantics; removed in 0.1.6 after acceptance.
 - Existing 19 behavior scenarios pass (only intended geometry assertions updated), plus five temporary-probe tests. CriticalState and its behavior assertions are unchanged.
-- Next user action: follow `docs/GCD_DIAGNOSTICS.md` in ESO and return the summary plus representative pages before `/reloadui`; evidence is memory-only. Heavy/Channel remains unavailable.
 
 ## Follow-up: HUD corrections (0.1.1)
 
@@ -38,7 +35,7 @@ Heavy/Channel was re-investigated using the API snapshot, native action bar/bind
 
 ## Next validation
 
-Run the client matrix in API_RESEARCH.md. Prioritize actual LibAddonMenu layout, normal/target/block movement, vanilla restoration, resource stroke appearance, shield value changes, slot cooldown behavior and feedback action-ID correlation. Verify the API version of the installed client; the repository targets the inspected upstream live snapshot, not a guessed release number.
+Confirm the 0.1.6 full Heavy completion frame and clean On/Off control after reload. Previously accepted gameplay behavior should remain the same. Verify the API version of the installed client; the repository targets the inspected upstream live snapshot, not a guessed release number.
 
 ## Collaboration rules
 

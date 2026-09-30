@@ -1,12 +1,12 @@
 # API research and verification
 
-## Current result: 0.1.5 Heavy/Channel adaptation
+## Current result: 0.1.6 accepted runtime cleanup
 
-Normal GCD/weaving 0.1.4 is confirmed in-game and unchanged. See [HEAVY_CHANNEL_REFERENCE.md](HEAVY_CHANNEL_REFERENCE.md) for the complete CombatMetronome execution audit, A/B/C/D/E classification and native implementation. Event-derived starts and cancellation plus finite expiry replace the old intentionally unavailable provider. Four reference result globals absent from this API snapshot are nil-guarded and explicitly reported by diagnostics; no numeric enum guesses. Earlier API-only findings below remain historical evidence, not the current feature status.
+Normal GCD/weaving 0.1.4 is confirmed in-game and unchanged. See [HEAVY_CHANNEL_REFERENCE.md](HEAVY_CHANNEL_REFERENCE.md) for the complete CombatMetronome execution audit, A/B/C/D/E classification and native implementation. Event-derived starts and cancellation plus finite expiry replace the old intentionally unavailable provider. The user has now accepted Heavy/Channel start, progress, completion, release, Block/Dodge and ownership restoration in ESO. Four reference result globals absent from this API snapshot remain nil-guarded; no numeric enum guesses. Temporary diagnostics were removed in 0.1.6. Earlier API-only findings below remain historical evidence, not the current feature status.
 
 ## Confirmed 0.1.4 ping-zone cue
 
-See [WEAVING_REFERENCE.md](WEAVING_REFERENCE.md). Public `GetLatency()` supplies the current millisecond lead, capped at 150. Existing global cooldown detection remains. Slot usability is diagnostic only. The historical 0.1.3 model below was rejected because it turns green too early.
+See [WEAVING_REFERENCE.md](WEAVING_REFERENCE.md). Public `GetLatency()` supplies the current millisecond lead, capped at 150. Existing global cooldown detection remains. Slot usability does not participate in timing; its former diagnostic reads were removed. The historical 0.1.3 model below was rejected because it turns green too early.
 
 ## Historical 0.1.3 shared-GCD correction (superseded)
 
@@ -14,7 +14,7 @@ The user supplied 16 records for LA ability 16037, slot type 1, hotbar 1. In eve
 
 The unconditional slot-1 `remaining<=0` requirement therefore prevented green throughout the active GCD. Version 0.1.3 accepts zero remaining OR a shared ability/crafted-ability global timer with exact remaining AND duration equality. Used/usable/no-failure checks remain, as does the existing GCD detector. Local, different, item and unknown timers remain blocking. No fixed delay, percentage or guessed tolerance is introduced. Exact matching is conservative; later differing samples should be inspected rather than masked with an arbitrary tolerance.
 
-Lua 5.1 replay of all 16 records yields gray in rows 1–2, full green in rows 3–11 and 13–16, and translucent gray idle in row 12. Additional negative cases retain all other gates; the 26-case suite passes. This proves the old condition failed on the supplied data and the correction handles that data, not that all weapons or optimal server weaving timing have been validated in-game. Diagnostics remain temporarily available with `shared` and corrected blocker counts. Earlier sections below document investigation history.
+Lua 5.1 replay of all 16 records yields gray in rows 1–2, full green in rows 3–11 and 13–16, and translucent gray idle in row 12. Additional negative cases retain all other gates; the 26-case suite passes. This proves the old condition failed on the supplied data and the correction handles that data, not that all weapons or optimal server weaving timing have been validated in-game. That temporary probe has since been removed. Earlier sections below document investigation history.
 
 Inspected 2026-09-30. Upstream `live/ESOUIDocumentation.txt` declares API **101051**. Local research copies are ignored under `.reference`; they are not addon dependencies.
 
@@ -37,7 +37,7 @@ Inspected 2026-09-30. Upstream `live/ESOUIDocumentation.txt` declares API **1010
 | Resource values | `GetUnitPower("player", COMBAT_MECHANIC_FLAGS_*)` returns current/max/effectiveMax; fraction uses max |
 | Shield | `GetUnitAttributeVisualizerEffectInfo("player", ATTRIBUTE_VISUAL_POWER_SHIELDING, STAT_MITIGATION, ATTRIBUTE_HEALTH, COMBAT_MECHANIC_FLAGS_HEALTH)`; nullable value defaults to zero |
 | GCD | `GetSlotCooldownInfo(slot)` returns remaining, duration, global, globalSlotType; require global and ability/crafted-ability source on physical slots 3..8; no 1000 ms assumption |
-| Weaving | No explicit optimal-window API. Derive availability from used/usable LA slot 1, no non-cost state failure, and remaining cooldown <=0, only during an active ability GCD; full green presentation, not a percentage threshold |
+| Weaving | No explicit optimal-window API. The accepted 0.1.4+ cue uses remaining GCD <= min(GetLatency(),150 ms), latched until completion |
 | Heavy/Channel | `GetAbilityCastInfo` is ability metadata, not current cast state. A general reliable current cast and cancellation API was not found in the inspected public surface. Do not start timers from metadata alone |
 | Feedback | `EVENT_ACTION_SLOT_ABILITY_USED(slot)` arms a short-lived action record; player-source `EVENT_COMBAT_EVENT` accepts direct damage/critical/shielded/blocked results only and consumes the record |
 | Vanilla reticle | `RETICLE.reticleTexture` is distinct from prompts/stealth. `RequestHidden` hides the entire reticle control, so it is unsuitable. Hide only texture, post-hook `UpdateHiddenState`, restore when overlay stops owning it |
@@ -95,7 +95,7 @@ While this GCD is active, slot 1 must pass all of `IsSlotUsed`, `IsSlotUsable`, 
 | `EVENT_ACTION_SLOT_STATE_UPDATED`, `EVENT_ACTION_UPDATE_COOLDOWNS`, `EVENT_ACTION_SLOTS_ACTIVE_HOTBAR_UPDATED` | Slot state/cooldown/bar changes | No complete active cast record, charge duration or universal interruption semantics |
 | Native `PrepareAttack` / `PerformAttack`, animation facilities | Private input entry points; public animation facilities animate addon UI controls | Button edges do not prove accepted gameplay state; no verified public player charge/animation-progress reader. No hooks or overrides of private gameplay functions added |
 
-**Historical 0.1.1 decision (superseded by the explicit heuristic/reference adaptation in 0.1.5):** keep Heavy/Channel intentionally unavailable and retain the localized tooltip. A reliable narrower alternative could be an explicitly verified per-ability effect/ combat-event mapping, or a supported library that guarantees start, current timing, voluntary cancellation, interruption and end across the required weapons/skills. Current evidence does not establish that guarantee; timeouts or metadata timers would produce false progress after cancellation. The existing provider boundary and gray-over-green priority remain tested but do not imply native functionality.
+**Historical 0.1.1 decision (superseded by the accepted adaptation in 0.1.5):** defer native Heavy/Channel until reference-based event handling was established. A reliable narrower alternative could be an explicitly verified per-ability effect/ combat-event mapping, or a supported library that guarantees start, current timing, voluntary cancellation, interruption and end across the required weapons/skills. Current evidence does not establish that guarantee; timeouts or metadata timers would produce false progress after cancellation. The existing provider boundary and gray-over-green priority remain tested but do not imply native functionality.
 
 ### Follow-up validation
 
@@ -107,6 +107,4 @@ In-client acceptance still required: visually inspect separated bars at the user
 
 The user confirms active GCD progress and Critical Health behavior in 0.1.1, but green never occurs. No per-gate trace was supplied. Static API inspection identifies the intended return types, not which live predicate was false, so no root cause or readiness fix is claimed.
 
-The original `used AND usable AND NOT failure AND remaining<=0` predicate is unchanged. GCD now reads all operands independently once per active frame and exposes all slot-1 cooldown returns plus its already-selected ability GCD timing. The temporary GCDDiagnostics module records these exact inputs, not a second detection model. `GetSlotBoundId(1)`, `GetSlotType(1)` and `GetActiveHotbarCategory()` provide context only and are public functions present in the inspected 101051 documentation. No guessed threshold or extra event subscription was added.
-
-See [diagnostic instructions and interpretation](GCD_DIAGNOSTICS.md). Five new Lua 5.1 tests verify capture disabled by default, independent evaluation despite first-gate failure, raw nil/missing API evidence, exact predicate parity, bounded sampling/pages, capacity/timeout and no extra update registrations. Existing CriticalState behavior tests remain unchanged. Await actual captured values before changing any gate; aggregate failure to show green is insufficient to identify a particular operand.
+A temporary memory-only probe then captured raw slot-1 state/cooldown information without changing the detection model. The supplied 16-row trace showed why slot usability was not a weaving cue. The later CombatMetronome-derived threshold solved the issue and was accepted in-client. The investigation code and diagnostic-only tests were removed in 0.1.6; the trace replay regression remains in tests/gcd_trace.lua.

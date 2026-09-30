@@ -37,7 +37,7 @@ function O.Runtime.Update(self)
     self.root:SetHidden(not visible)
     O.ReticleReplacement.SetActive(visible)
     if not visible then
-        O.HeavyChannel.Read(s.heavyChannel, now) -- maintain termination while HUD is hidden
+        O.HeavyChannel.Read(s.heavyChannel, now, false) -- expire without a hidden completion frame
         self.gcd = O.GCD.New()
         return
     end
@@ -65,6 +65,6 @@ function O.Runtime.Update(self)
     local alpha = O.VisibilityController.Alpha(self.visibility, "bottom", s.visibility,
         s.gcd or heavy ~= nil, state.combat, active, now) * s.hudOpacity
     local fill, color, intensity = O.GCD.Presentation(gcd)
-    if heavy ~= nil then fill, color, intensity = heavy, O.GCD.idleColor, 1 end
+    if heavy ~= nil then fill, color, intensity = O.HeavyChannel.Presentation(heavy) end
     O.ResourceRing.Draw(self.ring, "bottom", fill, color, alpha * intensity, false)
 end

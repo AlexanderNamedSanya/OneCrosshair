@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.5 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.6 targets the inspected ESO UI API **101051**.
 
 ## Installation
 
@@ -17,11 +17,11 @@ Dot with interpolated Normal/Target/Block geometry; combat red and normal white;
 ## Explicit API limitations
 
 - **Pursuit yellow**: no reliable general pursuit state was verified; the renderer supports yellow but the detector does not guess it from hostile targets or combat.
-- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md) and [diagnostics](docs/GCD_DIAGNOSTICS.md). Normal GCD/weaving is confirmed working in-game.
-- **Heavy/Channel progress**: enabled through the existing setting; event-derived finite charge/cast/channel progress temporarily owns the gray bottom bar and restores current GCD/idle on termination. Uses narrow CombatMetronome mechanisms without a dependency. [Algorithm, exceptions and limitations](docs/HEAVY_CHANNEL_REFERENCE.md); real weapon/ability cancellation still needs client validation.
+- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md). Normal GCD/weaving is confirmed working in-game.
+- **Heavy/Channel progress**: enabled through the existing setting; event-derived finite charge/cast/channel progress temporarily owns the bottom bar. Full Heavy completion shows one green frame; early cancellation and Channel/Cast completion restore current GCD/idle without an added hold. Uses narrow CombatMetronome mechanisms without a dependency. [Algorithm, exceptions and limitations](docs/HEAVY_CHANNEL_REFERENCE.md); the user confirmed start/progress/completion, early Heavy release, Block/Dodge cancellation and ownership restoration in ESO.
 - **Combat feedback**: a direct damage result must match recent player action evidence. Periodic results, incoming damage, uncorrelated procs and healing do not trigger it. Abilities with differing slot/impact IDs may be intentionally missed; delayed impacts after 1.5 s are ignored. This evidence window is not a GCD timer.
 
-See [API research](docs/API_RESEARCH.md) for sources and the required client test matrix. This repository was checked with a mocked ESO environment running real Lua 5.1; **in-client compatibility and visual quality still need validation**.
+See [API research](docs/API_RESEARCH.md) for sources and the required client test matrix. This repository was checked with a mocked ESO environment running real Lua 5.1; the accepted runtime behavior is documented in [project context](docs/PROJECT_CONTEXT.md). The new completion polish should be visually checked after reload.
 
 ## Development checks
 

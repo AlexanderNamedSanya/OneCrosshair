@@ -20,7 +20,6 @@ The manifest loads default String IDs, the selected locale, namespace, core serv
 | Resource + Health/Magicka/Stamina | Live fractions, stable palette and 150 ms smoothing |
 | Shield | Shield fraction against maximum health, clamped and smoothed |
 | GCD | Read ability-type globals on physical slots 3..8; derive the latched next-LA ping-zone cue; own bottom presentation |
-| GCDDiagnostics (temporary) | Opt-in, bounded memory capture of the exact readiness inputs; paginated `/ocgcd` output; removable after client investigation |
 | HeavyChannel + HeavyChannelData | Independent finite Heavy/cast/channel owner; event-confirmed start, cancellation, timeout and isolated exceptions |
 | Effects | Presentation rules and conservative feedback event correlation |
 | Preview | Isolated Normal/Target/Block examples, immediate preset changes |
@@ -34,9 +33,9 @@ An optional pure presentation function `combatFeedback(index, x, y, pulse)` retu
 
 ## Timing limitations
 
-HeavyChannel owns a native event-derived state plus the existing optional provider seam. `Read(enabled, now)` returns progress or nil. Its state exposes active/kind/progress, identity, interval and stop reason. Slot candidates require cooldown/combat confirmation; Heavy requires a matching equipped attack BEGIN. Cancellation/expiry removes ownership, revealing current GCD without modifying it. State updates continue while HUD is hidden; deactivation clears active/pending timing. The sole runtime update loop services both modules. See HEAVY_CHANNEL_REFERENCE.md for signal classification, exceptions and limitations. Pursuit stays unasserted. Green is a latency-based cue: remaining GCD <= min(GetLatency(), 150 ms), latched until completion or a new observed cycle. It is a heuristic, not a server-certified input window. See WEAVING_REFERENCE.md.
+HeavyChannel owns a native event-derived state plus the existing optional provider seam. `Read(enabled, now)` returns progress or nil. Its state exposes active/kind/progress, identity and interval. Slot candidates require cooldown/combat confirmation; Heavy requires a matching equipped attack BEGIN. Cancellation/expiry removes ownership, revealing current GCD without modifying it. State updates continue while HUD is hidden; deactivation clears active/pending timing. The sole runtime update loop services both modules. See HEAVY_CHANNEL_REFERENCE.md for signal classification, exceptions and limitations. Pursuit stays unasserted. Green is a latency-based cue: remaining GCD <= min(GetLatency(), 150 ms), latched until completion or a new observed cycle. It is a heuristic, not a server-certified input window. See WEAVING_REFERENCE.md.
 
-`GCD.Presentation` returns fill/color/intensity: idle is full gray at .25; active is actual progress at 1; ready is full green at 1. Runtime composes visibility and overrides this presentation with gray Heavy/Channel progress when HeavyChannel returns active progress. `CriticalState.Read` supplies side dimming and a low-opacity full-geometry halo independently of health fraction; ResourceRing keeps solid and glow alpha separate.
+`GCD.Presentation` returns fill/color/intensity: idle is full gray at .25; active is actual progress at 1; ready is full green at 1. Runtime composes visibility and delegates active Heavy/Channel presentation to `HeavyChannel.Presentation`: gray below full progress, the existing GCD green for full progress. Heavy receives one user-approved completion frame at its unchanged end timestamp; the next read releases ownership. Channel/Cast is never extended. Early cancellation releases immediately without completion green. Hidden gameplay consumes no completion frame. `CriticalState.Read` supplies side dimming and a low-opacity full-geometry halo independently of health fraction; ResourceRing keeps solid and glow alpha separate.
 
 ## UI ownership
 
@@ -44,10 +43,11 @@ No CVar, secure gameplay function, vanilla method replacement or external hidden
 
 Controls are pooled across preset changes; ring controls are allocated once. Arc writes are skipped when fill/color/opacity/glow are unchanged. Runtime does not depend on an OnUpdate handler on a hidden control.
 
-## 0.1.2 targeted diagnostics and geometry
+## Geometry and timing ownership
 
 ResourceRing owns radius, half-span, bow, thickness, shield expansion, glow diameter and sample count in one local geometry table. Resource modules and preset sizes do not own or duplicate these values. All five solid layers (including shield) and glow anchors use the same positional profile.
 
-GCD's active-bar cooldown selection and center-out progress are unchanged. HUD/GCD.lua owns the ping-zone threshold and cue latch; OneCrosshair.lua remains composition only. A rising cooldown or a prior sample whose remaining time elapsed identifies a new observed cycle, even without a zero frame. Hidden/deactivated gameplay clears the model through Runtime. Slot-1 observations remain diagnostic only; they never gate the cue. No LA hit, weapon table, queue, additional event handler or update registration is required.
+GCD's active-bar cooldown selection and center-out progress are unchanged. HUD/GCD.lua owns the ping-zone threshold and cue latch; OneCrosshair.lua remains composition only. A rising cooldown or a prior sample whose remaining time elapsed identifies a new observed cycle, even without a zero frame. Hidden/deactivated gameplay clears the model through Runtime. The former slot-1 diagnostic reads and cycle counter are removed. No LA hit, weapon table, queue, additional event handler or update registration is required.
 
-GCDDiagnostics loads immediately before GCD. Its capture function is called by the existing loop, with no diagnostic event handlers, timers or controls. A 15 s capture holds at most 256 rows, samples active cooldowns every 100 ms and also records predicate changes/completion. Active-frame cue/waiting/missing-latency counts include every observed frame. The timeout is checked on the next update/command, including after a hidden HUD; no background work is scheduled. Eight rows per explicit page keep chat output bounded. State is memory-only, disabled by default and discarded on reload; SavedVariables and localization/settings are untouched. Technical diagnostic field labels are deliberately isolated in the temporary probe, not added to gameplay UI.
+
+Version 0.1.6 removes the temporary diagnostic module, capture calls, slash command, history and debug-only source/reason/serial snapshots. The single runtime update and all remaining Heavy/Channel listeners serve gameplay. No debug chat output is shipped. Heavy full-release events may retain the owner only until its one completion frame; a subsequent accepted attack replaces it normally.

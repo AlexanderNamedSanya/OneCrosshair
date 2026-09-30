@@ -18,4 +18,17 @@ foreach ($file in $files) {
         throw "Deployment verification failed: $relativePath"
     }
 }
+# Explicit retired runtime files only; never mirror/delete other addon content.
+$retiredRelativePaths = @('HUD/GCDDiagnostics.lua')
+foreach ($relativePath in $retiredRelativePaths) {
+    $retiredPath = [IO.Path]::GetFullPath((Join-Path $destinationRoot $relativePath))
+    if (-not $retiredPath.StartsWith($destinationRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Retired runtime path outside addon: $retiredPath"
+    }
+    if (Test-Path -LiteralPath (Join-Path $sourceRoot $relativePath)) {
+        throw "Refusing to retire an existing source file: $relativePath"
+    }
+    if (Test-Path -LiteralPath $retiredPath -PathType Leaf) { Remove-Item -LiteralPath $retiredPath -Force }
+    if (Test-Path -LiteralPath $retiredPath) { throw "Retired runtime file still present: $relativePath" }
+}
 Write-Output "Deployed and verified $($files.Count) files: $destinationRoot"

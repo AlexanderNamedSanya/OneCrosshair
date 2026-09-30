@@ -1,20 +1,7 @@
 local O = OneCrosshair
 O.GCD = { idleColor = { .8, .82, .85 }, readyColor = { .26, .88, .38 } }
 local MAX_LATENCY_MS = 150 -- CombatMetronome default ping-zone cap; heuristic, not an engine window
-local LIGHT_ATTACK_SLOT = 1 -- physical Lua slot, unlike zero-based ACTION_BAR_* constants
 function O.GCD.New() return { active = false, progress = 0 } end
-local function ReadLightAttackState()
-    local state = { available = IsSlotUsed ~= nil and IsSlotUsable ~= nil
-        and ActionSlotHasNonCostStateFailure ~= nil and GetSlotCooldownInfo ~= nil }
-    -- Evaluate independently: short-circuiting hid which gates failed in-game.
-    if IsSlotUsed then state.used = IsSlotUsed(LIGHT_ATTACK_SLOT) end
-    if IsSlotUsable then state.usable = IsSlotUsable(LIGHT_ATTACK_SLOT) end
-    if ActionSlotHasNonCostStateFailure then state.failure = ActionSlotHasNonCostStateFailure(LIGHT_ATTACK_SLOT) end
-    if GetSlotCooldownInfo then
-        state.remaining, state.duration, state.global, state.globalSlotType = GetSlotCooldownInfo(LIGHT_ATTACK_SLOT)
-    end
-    return state
-end
 function O.GCD.Read(self)
     local wasActive, wasReady = self.active, self.ready
     local previousRemaining, previousAt = self.remaining, self.sampleAt
@@ -22,7 +9,7 @@ function O.GCD.Read(self)
     self.sampleAt = now
     self.active, self.progress, self.ready = false, 0, false
     self.latency, self.lead = nil, 0
-    self.remaining, self.duration, self.sourceSlot, self.la = 0, 0, nil, nil
+    self.remaining, self.duration = 0, 0
     if not GetSlotCooldownInfo then return self end
     -- Ignore potion/item/individual cooldowns: the explicit global flag is required.
     -- Scan the active bar; a locally cooling slot may mask its global cooldown.
@@ -33,7 +20,6 @@ function O.GCD.Read(self)
         local abilityCooldown = globalSlotType == ACTION_TYPE_ABILITY or globalSlotType == ACTION_TYPE_CRAFTED_ABILITY
         if global and abilityCooldown and duration > 0 and remaining > bestRemaining then
             bestRemaining, bestDuration = remaining, duration
-            self.sourceSlot = slot
         end
     end
     if bestRemaining > 0 then
@@ -46,15 +32,12 @@ function O.GCD.Read(self)
         -- including back-to-back skills with no sampled zero between them.
         local newCycle = not wasActive or bestRemaining > previousRemaining
             or (previousAt and now - previousAt >= previousRemaining)
-        if newCycle then self.cycle = (self.cycle or 0) + 1 end
         self.latency = GetLatency and GetLatency() or nil
         self.lead = math.min(MAX_LATENCY_MS, math.max(0, self.latency or 0))
         -- Enter the reference's ping zone, then latch until this GCD completes.
         -- LA availability and previous LA hits do not define the timing cue.
         self.ready = (not newCycle and wasReady) or bestRemaining <= self.lead
-        self.la = ReadLightAttackState() -- observational diagnostics only
     end
-    O.GCDDiagnostics.Capture(self)
     return self
 end
 function O.GCD.Presentation(self)

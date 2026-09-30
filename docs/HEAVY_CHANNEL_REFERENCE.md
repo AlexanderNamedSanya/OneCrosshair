@@ -1,4 +1,4 @@
-# Heavy / Channel / Cast implementation audit (0.1.5)
+# Heavy / Channel / Cast reference audit (current release 0.1.6)
 
 Primary reference: user-supplied CombatMetronome 1.7.7 and bundled DariansUtilities. The whole reference tree was searched for heavy/channel, cast duration, cancellation and adjustments, then the executable paths below were read. No dependency or reference addon files are shipped.
 
@@ -74,17 +74,17 @@ Public functions: GetAbilityCastInfo, GetSlotBoundId, GetSlotType, GetAbilityIdF
 
 Registered events: EVENT_ACTION_SLOT_ABILITY_USED, EVENT_ACTION_UPDATE_COOLDOWNS, EVENT_COMBAT_EVENT, EVENT_EFFECT_CHANGED, EVENT_ACTION_SLOTS_ACTIVE_HOTBAR_UPDATED, EVENT_WEAPON_PAIR_LOCK_CHANGED, EVENT_PLAYER_DEAD, EVENT_MOUNTED_STATE_CHANGED, EVENT_PLAYER_ACTIVATED, EVENT_PLAYER_DEACTIVATED. Runtime continues the single existing 16 ms update subscription; the feature adds no second timer, controls, input hooks or automated gameplay.
 
-Four reference-used result globals (ACTION_RESULT_BEGIN, ACTION_RESULT_BEGIN_CHANNEL, ACTION_RESULT_EFFECT_GAINED, ACTION_RESULT_EFFECT_FADED) are absent from the local public API 101051 enum snapshot. The reference uses them as client globals. They are explicitly nil-guarded, never supplied guessed numeric values. `/ocgcd on` prints their availability. Heavy start requires at least an emitted BEGIN variant; without it Heavy stays inactive. Cooldown-confirmed casts can still work. The API checker lists these exceptions explicitly; tests cover missing globals. This is a version-sensitive compatibility assumption, not an assertion of a documented universal active-cast API.
+Four reference-used result globals (ACTION_RESULT_BEGIN, ACTION_RESULT_BEGIN_CHANNEL, ACTION_RESULT_EFFECT_GAINED, ACTION_RESULT_EFFECT_FADED) are absent from the local public API 101051 enum snapshot. The reference uses them as client globals. They are explicitly nil-guarded, never supplied guessed numeric values. The temporary capability-printing probe was removed after client acceptance. Heavy start requires at least an emitted BEGIN variant; without it Heavy stays inactive. Cooldown-confirmed casts can still work. The API checker lists these exceptions explicitly; tests cover missing globals. This is a version-sensitive compatibility assumption, not an assertion of a documented universal active-cast API.
 
 ## OneCrosshair ownership and changes
 
-`Effects/HeavyChannel.lua` owns pending confirmation and one state record: active, kind (heavy/channel/cast), progress, abilityId, duration, startMs/endMs, source, reason/stoppedAt. `Read(enabled, now)` retains its numeric-progress-or-nil presentation contract; the existing provider seam remains available for contract tests. `Stop` ends ownership; natural completion can retain a separately queued next candidate, while block/death/disable clear it.
+`Effects/HeavyChannel.lua` owns pending confirmation and one state record: active, kind (heavy/channel/cast), progress, abilityId, duration, startMs/endMs and the one-frame Heavy completion marker. Diagnostic source/reason/timestamps and serial counters were removed. `Read(enabled, now)` retains its numeric-progress-or-nil presentation contract; the existing provider seam remains available for contract tests. `Stop` ends ownership; natural completion can retain a separately queued next candidate, while block/death/disable clear it. Full Heavy completion has the one green update explicitly approved for 0.1.6; channels/casts do not.
 
-Runtime initializes the module, updates HeavyChannel before GCD diagnostics and applies the existing priority: Heavy/Channel/Cast gray progress > current GCD presentation > idle. Hidden HUD updates still expire/cancel timing, and deactivation clears it. GCD tracking continues independently while the overlay owns the visible bar. There is no normal GCD reset/restart or second green-window algorithm. `HUD/GCD.lua` and the existing normal GCD/weaving/behavior test files are byte-for-byte unchanged from 0.1.4.
+Runtime initializes the module, updates HeavyChannel before GCD diagnostics and applies the existing priority: Heavy/Channel/Cast gray progress > current GCD presentation > idle. Hidden HUD updates still expire/cancel timing, and deactivation clears it. GCD tracking continues independently while the overlay owns the visible bar. There is no normal GCD reset/restart or second green-window algorithm. Normal GCD/weaving math remains unchanged from the accepted 0.1.4 implementation. In 0.1.6 only diagnostics were removed from GCD; two tests now assert active state instead of the deleted diagnostic cycle counter.
 
 No reference UI, settings, localization, SavedVariables, images, sounds, statistics, stack tracker, dependency library, remaining-time direction, max(GCD,cast) presentation or extra weaving window was copied. Only narrow mechanisms and necessary exception data were adapted into independent code.
 
-Changed runtime files: Effects/HeavyChannel.lua, new Effects/HeavyChannelData.lua, Core/Runtime.lua, HUD/GCDDiagnostics.lua, Settings/Settings.lua, Localization/en.lua and ru.lua (existing tooltip), manifest and namespace version (0.1.5). Tests: new tests/heavy_channel.lua, mock API additions and runner. Relevant architecture/design/context/API/diagnostic docs and README updated. OneCrosshair.lua, ResourceRing.lua and normal GCD module are unchanged.
+Current cleanup changes are listed in CLEANUP_0_1_6.md; the reference algorithm research above remains applicable.
 
 ## Concrete timelines
 
@@ -96,7 +96,7 @@ These are examples using API-reported durations, not universal weapon timings. P
 | 250 ms | gray 25% |
 | 500 ms | gray 50% |
 | 750 ms | gray 75% |
-| 1000 ms | mathematical endpoint 100%; ownership ends, current GCD/idle restored with no extra hold |
+| 1000 ms | endpoint 100%; one full-green Heavy completion frame, then current GCD/idle on the next update |
 | Alternative: release at 600 ms | matching release/cooldown signal ends ownership at 60%; current GCD/idle restored |
 
 | Channel example: API duration 2000 ms | State |
@@ -108,12 +108,12 @@ These are examples using API-reported durations, not universal weapon timings. P
 | 2000 ms | endpoint 100%, then idle or current GCD |
 | Alternative: block at 700 ms | owner ends on update; a 1000 ms underlying GCD shows actual 70% progress / 300 ms left |
 
-A 600 ms cast finishes at 600 ms, not at the end of its 1000 ms GCD. If an overlay ends with only 80 ms GCD left and ping=100 ms, the existing GCD model immediately supplies full green. Neither timing owner holds a special completed color or introduces text/icons.
+A 600 ms cast finishes at 600 ms, not at the end of its 1000 ms GCD. If an overlay ends with only 80 ms GCD left and ping=100 ms, the existing GCD model immediately supplies full green. The single Heavy completion frame reuses the existing GCD green; channels/casts are not held. No text/icons or new colors are introduced.
 
 ## Validation and remaining limitations
 
-The 32 existing behavior/diagnostics/weaving scenarios run unchanged. The new suite exercises native event starts, progress, release signatures, natural completion, incoming CC, block/dodge/swap, fade/failure/target death, weapon unlock, lifecycle, feature on/off, Heavy/channel transitions back to gray/green GCD or idle, queued confirmation/expiry, failed repeat input, duplicates, wrong source/target, crafted IDs, Crux, beam epochs, unsupported toggles, invalid metadata, absent result globals and bounded diagnostics. Seven locale load orders and public-symbol checks also run. Mocks verify the state machine and presentation contracts, not real client event semantics.
+The GCD/weaving and Heavy/channel behavior regressions remain; diagnostic-only tests were removed in 0.1.6. The new suite exercises native event starts, progress, release signatures, natural completion, incoming CC, block/dodge/swap, fade/failure/target death, weapon unlock, lifecycle, feature on/off, Heavy/channel transitions back to gray/green GCD or idle, queued confirmation/expiry, failed repeat input, duplicates, wrong source/target, crafted IDs, Crux, beam epochs, unsupported toggles, invalid metadata, absent result globals and cancellation/ownership restoration. Seven locale load orders and public-symbol checks also run. Mocks verify the state machine and presentation contracts, not real client event semantics.
 
 There is no universal authoritative release/cancel query. A missed end signal can leave a finite progress estimate visible until its expected end, but cannot extend that owner indefinitely; duplicate Heavy BEGIN does not refresh the timer. Zero-duration/invalid metadata and excluded indefinite channels do not create an owner. Beam fade requires a correlated gain/update from the current effect epoch; missing gain events fall back to other cancellation signals/timeout. Other channels can have indistinguishable same-ID late fades; ID/target checks reduce but do not eliminate ambiguity. Very late starts, weapon-specific charge behavior, API changes and scribed variants beyond the reference corrections need client validation. No claim of universal production reliability is made based solely on mocks.
 
-Client verification: `/reloadui`, enable the existing Heavy/Channel option, then `/ocgcd on`. Test each equipped weapon with full and partial Heavy, block/dodge/swap during charge, a short cast and a long channel, and repeated same-ID channels. Compare rows for owner, progress, timingId, duration, timingSource, start/end, reason/stopped with the visible bar. Test restoration both while GCD is active (including green) and after it expires. Return `/ocgcd summary` and the relevant pages if start or termination differs from the animation.
+Client acceptance supplied by the user: Heavy start/progress/completion, early release, Block/Dodge cancellation; Channel start/progress/normal completion, movement without false cancellation, Block/Dodge interruption; correct bottom-bar ownership/restoration. Remaining heuristics and special-ability caveats above are retained for future API updates. After reloading 0.1.6, visually verify only the new one-frame Heavy completion polish and unchanged early-cancel behavior. No developer slash command or capture system remains.

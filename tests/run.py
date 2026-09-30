@@ -27,7 +27,7 @@ print("PASS manifest load order, initialization, account-wide save and 7 locales
 
 lua = runtime("en")
 lua.execute((ROOT / "tests/behavior.lua").read_text(encoding="utf-8"))
-lua.execute((ROOT / "tests/diagnostics.lua").read_text(encoding="utf-8"))
+lua.execute((ROOT / "tests/gcd_trace.lua").read_text(encoding="utf-8"))
 
 lua.execute((ROOT / "tests/weaving.lua").read_text(encoding="utf-8"))
 
