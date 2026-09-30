@@ -11,7 +11,7 @@ ACTION_RESULT_BLOCKED_DAMAGE, ACTION_RESULT_DOT_TICK, ACTION_RESULT_HOT_TICK = 4
 EVENT_ADD_ON_LOADED, EVENT_PLAYER_ACTIVATED, EVENT_PLAYER_DEACTIVATED = 1, 2, 3
 EVENT_ACTION_SLOT_ABILITY_USED, EVENT_COMBAT_EVENT = 4, 5
 REGISTER_FILTER_SOURCE_COMBAT_UNIT_TYPE = 1
-T = { now = 0, target = false, interact = false, block = false, combat = false,
+T = { now = 0, latency = 100, target = false, interact = false, block = false, combat = false,
       camera = true, menu = false, reticleHidden = false, dead = false, powers = {100,100,[4]=100},
       maxHealth = 100, shield = 0, cooldowns = {}, ids = {[1]=101,[2]=102,[3]=103} }
 local methods = {}
@@ -94,3 +94,5 @@ function LibAddonMenu2:RegisterOptionControls(name,options)
 end
 CALLBACK_MANAGER = { handlers = {} }
 function CALLBACK_MANAGER:RegisterCallback(name,fn) self.handlers[name] = fn end
+
+function GetLatency() return T.latency end

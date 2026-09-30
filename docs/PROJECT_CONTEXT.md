@@ -13,11 +13,11 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 
 ## Known incomplete behaviors
 
-General pursuit detection and native Heavy/Channel start/end/cancellation remain deliberately inactive. Critical Health and GCD progress are confirmed in-game. The supplied 0.1.2 trace identifies the green-state blocker: slot 1 mirrors the positive ability-global cooldown even after its non-cost failure clears. Version 0.1.3 exempts this exactly matching shared timer while retaining the other gates. Replay validation passes; the installed fix still needs client confirmation.
+General pursuit detection and native Heavy/Channel start/end/cancellation remain deliberately inactive. Critical Health and GCD progress are confirmed in-game. The 0.1.4 weaving cue is mock-tested and still requires in-client verification.
 
-## Current fix (0.1.3)
+## Current fix (0.1.4)
 
-Slot-1 readiness permits zero remaining OR global=true with ability/crafted-ability type and remaining/duration exactly matching the selected ability GCD. Used/usable/no-failure remain required; local, mismatched and unknown cooldowns are not exempt. Diagnostics retain raw values and add `shared`; `cooldownBlocked` follows the corrected gate. The supplied 16-row trace is covered by a regression test. All 26 behavioral scenarios pass. Geometry, CriticalState, working GCD progress and other gameplay modules are unchanged. Next: `/reloadui`, confirm green when state failure clears, then gray idle at completion; `/ocgcd` remains available if needed.
+Replaced 0.1.3's incorrect “LA currently usable” model with CombatMetronome 1.7.7's ping-zone heuristic: remaining GCD <= min(GetLatency(), 150 ms). Entire bottom bar becomes green and latches to this observed cycle; completion restores idle and a renewed timer starts gray. Previous LA events and slot-1 availability do not shift the threshold. Runtime clears stale latch state when hidden/deactivated. No reference dependency, settings or SavedVariables changes. See WEAVING_REFERENCE.md for execution trace, constants, limitations and timeline. `/ocgcd` now records ping, lead and cycle alongside raw LA observations. Regression suite includes the supplied trace, thresholds, latency changes, consecutive cycles and lifecycle.
 
 ## Previous follow-up (0.1.2)
 

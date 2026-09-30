@@ -20,6 +20,7 @@ function O.Runtime.New(settings)
     end)
     EVENT_MANAGER:RegisterForEvent(O.name .. "Deactivated", EVENT_PLAYER_DEACTIVATED, function()
         self.active = false
+        self.gcd = O.GCD.New()
         self.root:SetHidden(true)
         O.ReticleReplacement.SetActive(false)
     end)
@@ -34,7 +35,10 @@ function O.Runtime.Update(self)
         and (not RETICLE or not RETICLE.control:IsHidden())
     self.root:SetHidden(not visible)
     O.ReticleReplacement.SetActive(visible)
-    if not visible then return end
+    if not visible then
+        self.gcd = O.GCD.New()
+        return
+    end
     local state = O.StateController.Read()
     O.CrosshairController.SetPreset(self.crosshair, s.preset, state.geometry)
     O.CrosshairController.Update(self.crosshair, state, s.crosshairOpacity, now)

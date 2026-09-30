@@ -1,4 +1,4 @@
--- TEMPORARY slot-1 probe. Remove after client semantics are established.
+-- TEMPORARY weaving timing and slot-1 probe. Remove after client semantics are established.
 -- No SavedVariables, extra events/update callbacks, or unsolicited frame output.
 local O = OneCrosshair
 local D = { enabled = false, rows = {}, counts = {} }
@@ -25,22 +25,19 @@ function D.Capture(gcd)
     if gcd.active then
         Count("active", true)
         Count("ready", gcd.ready)
-        Count("apiMissing", not la.available)
-        Count("usedBlocked", not la.used)
-        Count("usableBlocked", not la.usable)
-        Count("failureBlocked", la.failure)
-        Count("cooldownBlocked", not la.cooldownClear)
+        Count("waiting", not gcd.ready)
+        Count("latencyMissing", gcd.latency == nil)
     end
     local key = table.concat({ tostring(gcd.active), tostring(gcd.ready), tostring(la.available),
         tostring(la.used), tostring(la.usable), tostring(la.failure),
-        tostring(la.cooldownClear), tostring(la.sharedGCD), tostring(la.global), tostring(la.globalSlotType) }, ":")
-    -- Periodic active samples plus gate changes and a single completion row.
+        tostring(gcd.cycle), tostring(la.global), tostring(la.globalSlotType) }, ":")
+    -- Periodic active samples plus input/cycle changes and a single completion row.
     if key == D.lastKey and (not gcd.active or now - D.lastAt < INTERVAL) then return end
     if not gcd.active and not D.wasActive then return end
     D.wasActive, D.lastKey, D.lastAt = gcd.active, key, now
     local row = { time = now - D.start, active = gcd.active, ready = gcd.ready,
         gcdRemaining = gcd.remaining, gcdDuration = gcd.duration, sourceSlot = gcd.sourceSlot,
-        la = la }
+        latency = gcd.latency, lead = gcd.lead, cycle = gcd.cycle, la = la }
     if GetSlotBoundId then row.ability = GetSlotBoundId(1) end
     if GetSlotType then row.slotType = GetSlotType(1) end
     if GetActiveHotbarCategory then row.hotbar = GetActiveHotbarCategory() end
@@ -49,7 +46,7 @@ function D.Capture(gcd)
 end
 local function Summary()
     local parts = {}
-    for _, key in ipairs({ "active", "ready", "apiMissing", "usedBlocked", "usableBlocked", "failureBlocked", "cooldownBlocked" }) do
+    for _, key in ipairs({ "active", "ready", "waiting", "latencyMissing" }) do
         parts[#parts + 1] = key .. "=" .. (D.counts[key] or 0)
     end
     Print("recording=" .. tostring(D.enabled) .. " rows=" .. #D.rows .. " frames: " .. table.concat(parts, " "))
@@ -61,7 +58,7 @@ SLASH_COMMANDS["/ocgcd"] = function(command)
         D.rows, D.counts = {}, {}
         D.start, D.lastAt, D.lastKey, D.wasActive = GetFrameTimeMilliseconds(), 0, nil, false
         D.enabled = true
-        Print("START 15s; slot1; memory-only; /ocgcd off; /ocgcd summary; /ocgcd 1")
+        Print("START 15s; ping-zone; slot1 observational; memory-only; /ocgcd off; /ocgcd summary; /ocgcd 1")
     elseif command == "off" then
         Stop("manual")
     elseif command == "summary" then
@@ -76,10 +73,10 @@ SLASH_COMMANDS["/ocgcd"] = function(command)
         for i = (page - 1) * PAGE + 1, math.min(page * PAGE, #D.rows) do
             local row = D.rows[i]
             local s = row.la
-            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s shared=%s id=%s type=%s bar=%s",
+            Print(string.format("#%d t=%d active=%s ready=%s gcd=%s/%s source=%s api=%s used=%s usable=%s fail=%s cd=%s/%s/%s/%s ping=%s lead=%s cycle=%s id=%s type=%s bar=%s",
                 i, row.time, tostring(row.active), tostring(row.ready), tostring(row.gcdRemaining), tostring(row.gcdDuration),
                 tostring(row.sourceSlot), tostring(s.available), tostring(s.used), tostring(s.usable), tostring(s.failure),
-                tostring(s.remaining), tostring(s.duration), tostring(s.global), tostring(s.globalSlotType), tostring(s.sharedGCD),
+                tostring(s.remaining), tostring(s.duration), tostring(s.global), tostring(s.globalSlotType), tostring(row.latency), tostring(row.lead), tostring(row.cycle),
                 tostring(row.ability), tostring(row.slotType), tostring(row.hotbar)))
         end
     end

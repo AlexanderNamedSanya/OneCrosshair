@@ -1,6 +1,10 @@
 # API research and verification
 
-## Current result: 0.1.3 shared-GCD correction
+## Current result: 0.1.4 ping-zone cue
+
+See [WEAVING_REFERENCE.md](WEAVING_REFERENCE.md). Public `GetLatency()` supplies the current millisecond lead, capped at 150. Existing global cooldown detection remains. Slot usability is diagnostic only. The historical 0.1.3 model below was rejected because it turns green too early.
+
+## Historical 0.1.3 shared-GCD correction (superseded)
 
 The user supplied 16 records for LA ability 16037, slot type 1, hotbar 1. In every active record slot-1 remaining/duration exactly match the selected ability GCD with global=true/type=1. Used/usable remain true; failure is true only in rows 1–2, clearing at row 3 with 833/1000 ms remaining. The timer stays positive until row 12 (idle); row 13 begins another GCD with failure already false.
 

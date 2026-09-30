@@ -117,23 +117,23 @@ test("resources disabled does not hide enabled GCD; shield follows health", func
     O.settings.visibility = "OFF"; O.Runtime.Update(O.runtime)
     close(O.runtime.ring.arcs.bottom.alpha,0)
 end)
-test("ready is actual weapon availability, never a GCD percentage", function()
+test("ping-zone boundary, whole-bar latch and immediate idle", function()
     local g = O.GCD.New()
-    T.weaponUsable = true
-    T.cooldowns = {[3]={1190,1200,true,ACTION_TYPE_ABILITY}, [1]={30,100,false}}
+    T.latency = 100; T.weaponUsable = true
+    T.cooldowns = {[3]={1000,1000,true,ACTION_TYPE_ABILITY}}
     O.GCD.Read(g); assert(not g.ready)
-    T.cooldowns[1] = {0,100,false}; O.GCD.Read(g); assert(g.ready)
+    T.cooldowns[3][1] = 101; O.GCD.Read(g); assert(not g.ready)
+    T.cooldowns[3][1] = 100; O.GCD.Read(g); assert(g.ready)
     local fill,color,alpha = O.GCD.Presentation(g)
     close(fill,1); assert(color == O.GCD.readyColor); close(alpha,1)
-    T.weaponFailure = true; O.GCD.Read(g); assert(not g.ready)
-    T.weaponFailure = false; T.weaponUsable = false
-    T.cooldowns[3] = {1,1200,true,ACTION_TYPE_ABILITY}; O.GCD.Read(g); assert(not g.ready)
-    T.weaponUsable = true; O.GCD.Read(g); assert(g.ready)
-    T.cooldowns[3] = {0,1200,true,ACTION_TYPE_ABILITY}; O.GCD.Read(g)
-    assert(not g.active and not g.ready)
+    T.latency = 10; T.weaponUsable = false; T.weaponFailure = true
+    T.cooldowns[3][1] = 99; O.GCD.Read(g); assert(g.ready)
+    T.cooldowns = {}; O.GCD.Read(g); assert(not g.active and not g.ready)
     fill,color,alpha = O.GCD.Presentation(g)
     close(fill,1); assert(color == O.GCD.idleColor); close(alpha,.25)
+    T.latency = 100; T.weaponFailure = false
 end)
+
 test("physical slots 3..8 only, ultimate included, item globals rejected", function()
     local g = O.GCD.New()
     T.cooldowns = {[2]={1000,1000,true,ACTION_TYPE_ABILITY}, [3]={100,500,true,ACTION_TYPE_ITEM}}
@@ -142,14 +142,15 @@ test("physical slots 3..8 only, ultimate included, item globals rejected", funct
     O.GCD.Read(g); assert(g.active); close(g.progress,.875)
     T.cooldowns = {}
 end)
-test("ready capability missing or empty weapon never claims readiness", function()
+test("LA availability is observational, never the cue gate", function()
     local g = O.GCD.New()
     T.cooldowns = {[3]={100,800,true,ACTION_TYPE_ABILITY}}
-    T.emptyWeapon = true; O.GCD.Read(g); assert(g.active and not g.ready)
+    T.emptyWeapon = true; O.GCD.Read(g); assert(g.active and g.ready)
     T.emptyWeapon = false
     local usable = IsSlotUsable; IsSlotUsable = nil
-    O.GCD.Read(g); assert(g.active and not g.ready); IsSlotUsable = usable
+    O.GCD.Read(g); assert(g.active and g.ready); IsSlotUsable = usable
 end)
+
 test("critical glow spans empty HP without solid fill and removes immediately", function()
     local ring = O.runtime.ring
     local _,dim,glow = O.CriticalState.Read(true,.1)

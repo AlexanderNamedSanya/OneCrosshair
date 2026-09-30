@@ -29,12 +29,15 @@ lua = runtime("en")
 lua.execute((ROOT / "tests/behavior.lua").read_text(encoding="utf-8"))
 lua.execute((ROOT / "tests/diagnostics.lua").read_text(encoding="utf-8"))
 
+lua.execute((ROOT / "tests/weaving.lua").read_text(encoding="utf-8"))
+
 # Verify public API symbols against the inspected upstream reference, when present.
 api_path = ROOT / ".reference/API.txt"
 if api_path.exists():
     api = api_path.read_text(encoding="utf-8")
-    code = "\n".join(p.read_text(encoding="utf-8") for p in ROOT.rglob("*.lua")
-                     if ".reference" not in p.parts and "tests" not in p.parts)
+    code = "\n".join((ROOT / line.replace("$(language)", "en")).read_text(encoding="utf-8")
+                     for line in (ROOT / "OneCrosshair.txt").read_text().splitlines()
+                     if line.endswith(".lua"))
     functions = set(re.findall(r"\b((?:Get|Is|Does|ActionSlotHas)[A-Z]\w+)\(", code))
     # GetString is an ESO Lua library function, not an engine API function.
     missing = [name for name in functions - {"GetString"} if f"* {name}(" not in api]

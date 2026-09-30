@@ -1,5 +1,6 @@
 local O = OneCrosshair
 O.GCD = { idleColor = { .8, .82, .85 }, readyColor = { .26, .88, .38 } }
+local MAX_LATENCY_MS = 150 -- CombatMetronome default ping-zone cap; heuristic, not an engine window
 local LIGHT_ATTACK_SLOT = 1 -- physical Lua slot, unlike zero-based ACTION_BAR_* constants
 function O.GCD.New() return { active = false, progress = 0 } end
 local function ReadLightAttackState()
@@ -15,7 +16,12 @@ local function ReadLightAttackState()
     return state
 end
 function O.GCD.Read(self)
+    local wasActive, wasReady = self.active, self.ready
+    local previousRemaining, previousAt = self.remaining, self.sampleAt
+    local now = GetFrameTimeMilliseconds()
+    self.sampleAt = now
     self.active, self.progress, self.ready = false, 0, false
+    self.latency, self.lead = nil, 0
     self.remaining, self.duration, self.sourceSlot, self.la = 0, 0, nil, nil
     if not GetSlotCooldownInfo then return self end
     -- Ignore potion/item/individual cooldowns: the explicit global flag is required.
@@ -35,21 +41,18 @@ function O.GCD.Read(self)
         self.remaining, self.duration = bestRemaining, bestDuration
         self.progress = O.Clamp(1 - bestRemaining / bestDuration)
     end
-    -- Derived readiness, not an advertised server-side "optimal weave" event:
-    -- a live ability GCD overlaps a currently usable light attack.
-    -- No percentage, latency fudge or fixed-duration timer is involved.
-    -- Client trace: slot 1 mirrors the ability GCD even after its state failure
-    -- clears. Only an explicitly matching ability-global timer is exempted;
-    -- unrelated or local weapon cooldowns still block readiness.
     if self.active then
-        self.la = ReadLightAttackState()
-        local la = self.la
-        la.sharedGCD = la.global == true
-            and (la.globalSlotType == ACTION_TYPE_ABILITY or la.globalSlotType == ACTION_TYPE_CRAFTED_ABILITY)
-            and la.duration == self.duration and la.remaining == self.remaining
-        la.cooldownClear = la.remaining ~= nil and (la.remaining <= 0 or la.sharedGCD)
-        self.ready = la.available and la.used and la.usable and not la.failure
-            and la.cooldownClear or false
+        -- A rising timer or an expired prior sample starts a fresh observed cycle,
+        -- including back-to-back skills with no sampled zero between them.
+        local newCycle = not wasActive or bestRemaining > previousRemaining
+            or (previousAt and now - previousAt >= previousRemaining)
+        if newCycle then self.cycle = (self.cycle or 0) + 1 end
+        self.latency = GetLatency and GetLatency() or nil
+        self.lead = math.min(MAX_LATENCY_MS, math.max(0, self.latency or 0))
+        -- Enter the reference's ping zone, then latch until this GCD completes.
+        -- LA availability and previous LA hits do not define the timing cue.
+        self.ready = (not newCycle and wasReady) or bestRemaining <= self.lead
+        self.la = ReadLightAttackState() -- observational diagnostics only
     end
     O.GCDDiagnostics.Capture(self)
     return self

@@ -1,46 +1,19 @@
-# Temporary slot-1 diagnostic capture
+# GCD diagnostics (0.1.4)
 
-The supplied 0.1.2 trace identified the blocker: slot 1 mirrors the active ability-global cooldown, while used/usable are true and failure clears at row 3. Version 0.1.3 exempts this shared timer only when its ability type and remaining/duration match the selected GCD. Other readiness gates remain. This temporary probe is retained for client confirmation.
+`/ocgcd on` starts a memory-only 15-second capture. `/ocgcd off` stops it, `/ocgcd summary` prints frame counters, and `/ocgcd 1`, `/ocgcd 2`, etc. print eight records per page. Maximum 256 records, periodic active samples every 100 ms plus input/cycle/ready transitions and completion. No extra update/event registrations or SavedVariables. Disabled by default.
 
-## In-game steps
-
-1. `/reloadui` to load 0.1.3. Confirm the entire bottom bar turns green when the state failure clears during GCD, then gray idle at completion. Geometry and CriticalState are unchanged from 0.1.2.
-2. Target a training dummy with your usual weapon. Keep GCD enabled and a visibility mode that shows it in combat.
-3. Enter `/ocgcd on`, close chat and use several ordinary instant abilities for 4–5 seconds, then your usual LA + ability sequence for another 4–5 seconds. Observe that the normal GCD fill still works and whether any green occurs. Avoid changing weapons during this first capture.
-4. Enter `/ocgcd off`, then `/ocgcd summary`. Capture also stops after 15 seconds or 256 rows, evaluated on the next update or command; `off` is harmless if it has already stopped.
-5. Enter `/ocgcd 1`, `/ocgcd 2`, etc. Each page prints at most eight sample lines. Return the summary and pages covering the start and end of a GCD, plus any change in `used`, `usable`, `fail`, or cooldown reaching zero. Also report weapon type and whether the sample was abilities-only or weaving.
-6. Do not `/reloadui` before copying the results: the buffer is memory-only. A new `/ocgcd on` replaces the previous capture. Repeat with another weapon only after preserving the first results.
-
-No ongoing output is printed per frame. Automatic output consists only of START/STOP notices; summary/pages are explicit commands. With capture off, no rows are collected. No settings, persistent data or permanent logging framework were added.
-
-## Exact fields
+After `/reloadui`, compare skill-only and LA -> Skill repetitions. Both should expand gray before the late ping-zone cue. The whole bar should turn green near the end, stay green after pressing LA, and return to gray idle at completion. A new skill starts gray. Existing visibility settings apply. Capture with gameplay visible and chat closed; afterward return pages spanning cue onset/completion and the summary.
 
 | Field | Meaning |
 | --- | --- |
-| `t` | Milliseconds since capture start |
-| `active`, `ready` | Current GCD/ready booleans used by presentation |
-| `gcd=remaining/duration`, `source` | Selected live ability GCD timing and its physical slot 3..8 |
-| `api` | All four functions required by the readiness predicate exist |
-| `used` | Raw `IsSlotUsed(1)` |
-| `usable` | Raw `IsSlotUsable(1)` |
-| `fail` | Raw `ActionSlotHasNonCostStateFailure(1)` |
-| `cd=remaining/duration/global/type` | All four raw `GetSlotCooldownInfo(1)` returns; milliseconds for the first two |
-| `shared` | Global ability/crafted-ability timer exactly matching the current ability GCD remaining/duration |
-| `id`, `type`, `bar` | Slot-1 bound ID, slot type and active hotbar category, to contextualize the capture |
+| `active`, `ready` | Observed GCD and latched next-LA cue used by rendering |
+| `gcd`, `source` | Selected remaining/duration in ms and physical ability slot |
+| `ping`, `lead` | Raw GetLatency and capped 0..150 ms cue lead |
+| `cycle` | Observed cycle number; resets when runtime model is cleared |
+| `api`, `used`, `usable`, `fail` | Raw slot-1 probe availability and state; **not cue gates** |
+| `cd` | Slot-1 remaining/duration/global/type, observational only |
+| `id`, `type`, `bar` | Slot-1 bound ID, slot type and active hotbar |
 
-`nil` is kept as `nil`, not coerced to zero/false. Completion rows show `active=false`; LA predicate fields are nil there because only active-GCD frames evaluate readiness. The active GCD progress remains based on its own selected ability slot, not the slot-1 timer.
+Summary counters count active frames, ready frames, waiting frames and missing-latency frames. A ready row can have remaining greater than current lead if ping dropped after cue entry: the cue is deliberately latched. Completion has no slot observations; nil remains nil. Hidden gameplay clears the model, so a completion row may not be captured while the HUD is hidden. Timeout is checked on next capture/command, with no background timer.
 
-## Reading the summary
-
-Counts are **observed active frames**, not durations, cooldown percentages or just stored rows. Rows are sampled every 100 ms, with additional predicate-state changes. Each gate is evaluated independently even if an earlier gate fails, so multiple blocked counts can overlap:
-
-- `usedBlocked`: `used` false/nil.
-- `usableBlocked`: `usable` false/nil.
-- `failureBlocked`: `fail` truthy.
-- `cooldownBlocked`: slot-1 remaining is nil, or positive without qualifying as the matching shared GCD. Positive `cd` with `shared=true` no longer blocks readiness.
-- `apiMissing`: required function missing.
-- `ready`: frames when the original conjunction actually passed.
-
-If `active=0`, the capture did not observe an active GCD while the gameplay HUD was updating; repeat with chat closed and abilities visibly filling the bottom bar. If `active>0`, compare each blocked count with it and inspect sample pages. For example, a gate blocked on every active frame is direct evidence that it prevents green in that capture. It does not by itself justify removing that check: its actual ESO semantics must be established before changing the predicate. If `ready>0` but the bar remains gray, report this separately; presentation/visibility then also needs investigation.
-
-This probe does not hook attack inputs or use private APIs. It reuses documented public read functions already verified in the project's API snapshot. The supplied trace establishes the old gate's failure, but not universal optimal weaving timing. The 0.1.3 fix is replay-tested and awaits client confirmation.
+With ping=100 and a 1000 ms GCD, ready begins at remaining<=100, not when usable becomes true. The supplied historical trace has only its 33 ms row green at this latency; the next 1000 ms cycle starts gray. If diagnostics show ready but the bar stays gray while visible, report it as a presentation issue. This is a latency heuristic, not a guaranteed engine weaving window; see WEAVING_REFERENCE.md.

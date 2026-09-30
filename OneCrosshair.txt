@@ -1,7 +1,7 @@
 ## Title: OneCrosshair
 ## Description: Contextual crosshair and fixed resource ring.
 ## Author: OneCrosshair
-## Version: 0.1.3
+## Version: 0.1.4
 ## APIVersion: 101051
 ## SavedVariables: OneCrosshairSavedVariables
 ## DependsOn: LibAddonMenu-2.0

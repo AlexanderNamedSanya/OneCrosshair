@@ -1,6 +1,6 @@
 # OneCrosshair
 
-ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.3 targets the inspected ESO UI API **101051**.
+ESO addon: animated contextual crosshair with four fixed resource bars. Version 0.1.4 targets the inspected ESO UI API **101051**.
 
 ## Installation
 
@@ -17,7 +17,7 @@ Dot with interpolated Normal/Target/Block geometry; combat red and normal white;
 ## Explicit API limitations
 
 - **Pursuit yellow**: no reliable general pursuit state was verified; the renderer supports yellow but the detector does not guess it from hostile targets or combat.
-- **Green readiness**: the client trace showed slot 1 mirroring the ability GCD. Version 0.1.3 exempts this exactly matching global timer while retaining used/usable/no-failure checks and blocking separate cooldowns. Trace replay passes; client confirmation is still needed. This is a state-based cue, not guaranteed optimal server weaving timing. [Diagnostic commands](docs/GCD_DIAGNOSTICS.md) remain available; no timing constants are guessed.
+- **Weaving cue**: the whole bottom bar turns green in the last `min(GetLatency(), 150)` ms of the current GCD and stays green until completion. This adapts CombatMetronome's ping-zone heuristic, not LA usability or a guaranteed engine input window. [Reference analysis](docs/WEAVING_REFERENCE.md) and [diagnostics](docs/GCD_DIAGNOSTICS.md). Client verification remains necessary.
 - **Heavy/Channel progress**: setting and presentation integration exist, but no built-in timing provider is enabled. Tooltip cast durations do not establish actual start/cancel/release. No simulated progress is shown.
 - **Combat feedback**: a direct damage result must match recent player action evidence. Periodic results, incoming damage, uncorrelated procs and healing do not trigger it. Abilities with differing slot/impact IDs may be intentionally missed; delayed impacts after 1.5 s are ignored. This evidence window is not a GCD timer.
 
