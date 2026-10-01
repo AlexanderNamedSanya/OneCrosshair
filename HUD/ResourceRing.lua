@@ -11,6 +11,10 @@ local specs = {
 }
 local function Line(parent, level)
     local control = O.Control(parent, CT_LINE)
+    -- Keep native endpoint geometry; soften transverse edges in texture alpha.
+    -- No longitudinal fade: adjacent chords must not become a dotted arc.
+    control:SetTexture("OneCrosshair/Assets/Stroke.dds")
+    control:SetTextureCoords(0, 1, 0, 1)
     control:SetDrawLevel(level)
     control:SetPixelRoundingEnabled(false)
     control:SetColor(1, 1, 1, 0)
@@ -20,7 +24,9 @@ local function Position(line, parent, radius, a, b, thickness)
     line:ClearAnchors()
     line:SetAnchor(TOPLEFT, parent, CENTER, radius * math.cos(a), radius * math.sin(a))
     line:SetAnchor(BOTTOMRIGHT, parent, CENTER, radius * math.cos(b), radius * math.sin(b))
-    line:SetThickness(thickness)
+    -- Stroke's half-alpha contours are at V=.05/.95. Preserve the approved
+    -- apparent thickness there, with only transparent edge support outside it.
+    line:SetThickness(thickness / .9)
 end
 function R.New(parent)
     local self = { root = O.Control(parent), arcs = {} }

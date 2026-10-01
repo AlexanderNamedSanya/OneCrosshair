@@ -1,5 +1,9 @@
 # Design system
 
+Stroke edges now use a shared white alpha texture. Approved dimensions refer
+to its half-alpha contour; a small transparent fringe surrounds that contour.
+No geometry, spacing, timing or opacity redesign. See RENDERING_QUALITY.md.
+
 Two independently centered layers: preset crosshair and resource ring. The five geometry/opacity controls are removed from the UI for release 1.0; commented code values live in Core/Config.lua.
 
 - Dot uses a 1.5-unit design texture, rendered at 3 UI units with the custom 2x scale, with its existing Normal/Target/Block shapes, 250 ms geometry transition, 100 ms color transition and 130 ms feedback. Color/geometry priorities are unchanged.

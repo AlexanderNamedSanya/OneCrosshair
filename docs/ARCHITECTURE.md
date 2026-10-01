@@ -1,5 +1,10 @@
 # Architecture
 
+Rendering-quality pass: native ring/Rays lines now share the tintable
+256×256 alpha-edge Stroke.dds. Anchors, chord counts and fill logic are retained;
+line envelopes compensate for transparent margins to retain half-alpha width.
+See [RENDERING_QUALITY.md](RENDERING_QUALITY.md) for the audit and client checks.
+
 ## Composition and load order
 
 The manifest loads default String IDs, the selected locale, namespace, fixed release config, core services, registry/presets, rendering/HUD/effects, preview/settings, runtime, then the thin `OneCrosshair.lua` entry point. The entry point handles `EVENT_ADD_ON_LOADED`, opens account-wide SavedVariables and composes settings/runtime. No module requires or calls back into initialization.

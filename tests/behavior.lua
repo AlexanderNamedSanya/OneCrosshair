@@ -168,14 +168,14 @@ test("circular geometry and shield use the same path and outward-only 200 percen
     local ring = O.runtime.ring
     local function radius(c) return math.sqrt(c.anchor[4]^2+c.anchor[5]^2) end
     local top = ring.arcs.health
-    close(top[1].control.thickness,5); close(ring.arcs.shield[1].control.thickness,7)
+    close(top[1].control.thickness*.9,5); close(ring.arcs.shield[1].control.thickness*.9,7)
     for i=1,64 do
         close(radius(top[i].control),45.25)
         close(top[i].control.anchor[4],ring.arcs.shield[i].control.anchor[4])
         close(top[i].control.anchor[5],ring.arcs.shield[i].control.anchor[5])
         local inner,outer=top[i].glows[1],top[i].glows[#top[i].glows]
-        close(radius(inner)-inner.thickness/2,45.25+2.5)
-        close(radius(outer)+outer.thickness/2,45.25+2.5+10)
+        close(radius(inner)-inner.thickness*.9/2,45.25+2.5)
+        close(radius(outer)+outer.thickness*.9/2,45.25+2.5+10)
     end
     close(O.PresetRegistry.Get("dot").elements[1].size,1.5)
 end)

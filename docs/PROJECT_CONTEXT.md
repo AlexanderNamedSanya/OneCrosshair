@@ -1,5 +1,9 @@
 # Project context
 
+Current rendering pass textures existing native lines with 256×256 Stroke.dds
+without changing gameplay. Behavior checks pass; smoother in-game appearance
+remains pending `/reloadui` comparison. See RENDERING_QUALITY.md for the audit.
+
 OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lightweight, independently sized contextual resource ring. The repository began empty; this milestone establishes modular source, documentation, tests and original textures.
 
 ## Implemented milestone
