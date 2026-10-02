@@ -68,6 +68,6 @@ function R.Draw(arc, name, fill, color, alpha, glowing)
     arc.first:SetColor(color[1], color[2], color[3], lower)
     arc.second:SetColor(color[1], color[2], color[3], upper)
     if arc.glow and glowChanged then
-        arc.glow:SetColor(color[1], color[2], color[3], glowing and alpha * .6 or 0)
+        arc.glow:SetColor(color[1], color[2], color[3], alpha * .6 * glowing)
     end
 end

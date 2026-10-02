@@ -82,7 +82,7 @@ function R.Draw(self, name, fill, color, alpha, glowing)
         if glowChanged then
             for band, glow in ipairs(point.glows) do
                 local strength = (1 - (band - .5) / glowBands) ^ 2
-                glow:SetColor(color[1], color[2], color[3], glowing and alpha * .6 * strength or 0)
+                glow:SetColor(color[1], color[2], color[3], alpha * .6 * strength * glowing)
             end
         end
     end

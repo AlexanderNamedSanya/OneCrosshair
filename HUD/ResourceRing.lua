@@ -35,6 +35,8 @@ function R.Configure(self, settings)
     end
 end
 function R.Draw(self, name, fill, color, alpha, glowing)
+    -- Boolean static previews and animated runtime intensity share the renderer.
+    glowing = type(glowing) == "number" and O.Clamp(glowing) or (glowing and 1 or 0)
     if self.textured then O.ArcRenderer.Draw(self.arcs[name], name, fill, color, alpha, glowing)
     else O.SegmentedArcRenderer.Draw(self.fallback, name, fill, color, alpha, glowing) end
 end

@@ -1,5 +1,9 @@
 # Design system
 
+Low Resource Warning fades in with a 180 ms smoothstep independently for each
+resource. Recovery above 25%, disabling, OFF and hidden gameplay reset it
+immediately. Static settings examples keep showing the complete warning.
+
 The ring now uses curved alpha masks, retaining radius 45.25, solid thickness 5,
 Shield thickness 7 and 81-degree quadrants. Warning falloff is continuous rather
 than eight hard bands. Source edge coverage transitions span .7 UI units around

@@ -46,6 +46,9 @@ lua.execute((ROOT / "tests/release_1_0.lua").read_text(encoding="utf-8"))
 lua = runtime("en")
 lua.execute((ROOT / "tests/rendering.lua").read_text(encoding="utf-8"))
 
+lua = runtime("en")
+lua.execute((ROOT / "tests/low_resource_animation.lua").read_text(encoding="utf-8"))
+
 # Verify public API symbols against the inspected upstream reference, when present.
 api_path = ROOT / ".reference/API.txt"
 if api_path.exists():

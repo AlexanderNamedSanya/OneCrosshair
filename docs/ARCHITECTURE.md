@@ -1,5 +1,9 @@
 # Architecture
 
+LowResource owns three runtime Animator scalars for a 180 ms warning fade-in.
+ResourceRing accepts a numeric warning intensity or a boolean static preview;
+both renderer paths multiply only warning opacity. No new update subscription.
+
 Rendering-quality correction: the packaged ring uses complete curved alpha
 textures via Rendering/ArcRenderer.lua, with two pooled frames per fill and
 one warning per resource: 13 texture controls. Radius/thickness/gaps and angular
