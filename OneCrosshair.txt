@@ -22,6 +22,9 @@ Crosshair/Presets/Rays.lua
 Crosshair/Presets/Diamonds.lua
 Crosshair/Presets/ESO.lua
 Crosshair/CrosshairController.lua
+Rendering/ArcAssets.lua
+Rendering/ArcRenderer.lua
+Rendering/SegmentedArcRenderer.lua
 HUD/ResourceRing.lua
 HUD/Resource.lua
 HUD/Health.lua

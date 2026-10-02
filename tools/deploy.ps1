@@ -4,7 +4,7 @@ $destinationRoot = 'C:\Users\Public\Documents\Elder Scrolls Online\live\AddOns\O
 $files = @(
     Get-Item -LiteralPath (Join-Path $sourceRoot 'OneCrosshair.txt')
     Get-Item -LiteralPath (Join-Path $sourceRoot 'OneCrosshair.lua')
-    foreach ($folder in @('Core', 'Crosshair', 'HUD', 'Effects', 'Preview', 'Settings', 'Localization', 'Assets')) {
+    foreach ($folder in @('Core', 'Crosshair', 'Rendering', 'HUD', 'Effects', 'Preview', 'Settings', 'Localization', 'Assets')) {
         Get-ChildItem -LiteralPath (Join-Path $sourceRoot $folder) -Recurse -File
     }
 )

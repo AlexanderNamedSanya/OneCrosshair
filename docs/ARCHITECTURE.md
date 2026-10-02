@@ -1,8 +1,10 @@
 # Architecture
 
-Rendering-quality pass: native ring/Rays lines now share the tintable
-256×256 alpha-edge Stroke.dds. Anchors, chord counts and fill logic are retained;
-line envelopes compensate for transparent margins to retain half-alpha width.
+Rendering-quality correction: the packaged ring uses complete curved alpha
+textures via Rendering/ArcRenderer.lua, with two pooled frames per fill and
+one warning per resource: 13 texture controls. Radius/thickness/gaps and angular
+fill directions are retained. SegmentedArcRenderer is the lazy fallback for
+code-edited geometry whose assets have not been regenerated. Rays retains Stroke.dds.
 See [RENDERING_QUALITY.md](RENDERING_QUALITY.md) for the audit and client checks.
 
 ## Composition and load order
@@ -21,7 +23,7 @@ The manifest loads default String IDs, the selected locale, namespace, fixed rel
 | ReticleReplacement | Reversible hide of the vanilla decorative texture only |
 | PresetRegistry | Ordered registry, ID lookup and default fallback |
 | CrosshairController | Texture pool and animated preset coordinates/alpha/rotation; color and feedback |
-| ResourceRing | Four configurable circular quadrants made from pooled native lines; coincident shield geometry; outward warning bands |
+| ResourceRing | Coordinates curved-texture rendering; coincident shield; full outward warning; procedural fallback for unmatched code geometry |
 | Resource + Health/Magicka/Stamina | Live fractions, stable palette and 150 ms smoothing |
 | Shield | Shield fraction against maximum health, clamped and smoothed |
 | GCD | Read ability-type globals on physical slots 3..8; derive the latched next-LA ping-zone cue; own bottom presentation |

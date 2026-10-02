@@ -1,5 +1,89 @@
 # Rendering-quality pass
 
+## Current correction after failed client acceptance
+
+The supplied ESO screenshot shows visible stair steps after commit `98e4540`.
+That pass did not achieve the requested smoothness; smoothing the native line
+texture was insufficient. Its report below is historical, not the current
+default renderer. The screenshot establishes the failure, but does not expose
+the engine's UV orientation/filter implementation or isolate a single cause.
+
+The default ring now uses **complete curved alpha masks**, not chord controls.
+`Rendering/ArcRenderer.lua` isolates rendering; HUD/ResourceRing.lua selects
+that path and preserves its state-module interface. No resource, timing,
+visibility, preset or SavedVariables module was changed.
+
+Two original white BC3/DXT5 atlases, `Assets/ArcFill.dds` and `ArcShield.dds`,
+are each 2048×4096 with 65 populated 256×256 cells for fractions 0..1 in 1/64
+steps. `ArcWarning.dds` is one uncompressed 256×256 white alpha mask. Atlas
+memory is 16 MiB total plus 256 KiB for the warning, shared by every ring.
+Normal controls are 117.5 UI units square, so source cells are downscaled.
+Transparent margins prevent neighboring atlas cells from contaminating edges.
+
+Generator `tools/generate_arcs.py` reads Core/Config.lua. Its radial signed
+distance and angular cap distance produce a .7-UI-unit smoothstep coverage
+transition centered on the original boundaries. BC3 retains intermediate alpha;
+RGB remains white. Source radius 45.25, resource thickness 5, Shield thickness
+7, and full span 81 degrees are unchanged. Angular end caps are antialiased too.
+The warning retains the full attribute and outward two-thickness envelope,
+with a continuous quadratic falloff replacing the eight radial steps.
+
+Every solid arc owns two pre-created CT_TEXTURE controls. UVs select adjacent
+curved frames and opacity interpolates them; source-over compensation avoids
+dimming their shared solid interior. Only the fill edge interpolates, with no
+rectangular clipping or per-frame asset generation. Textures use documented
+SetTextureCoords, SetTextureRotation about (.5,.5), and TEX_BLEND_MODE_ALPHA.
+Same-level creation order places the second frame above the first. Health and
+Shield stay centered at the top. Bottom stays centered at the bottom. For
+Magicka/Stamina each selected frame rotates about the ring center so its lower
+endpoint stays fixed as the upper endpoint advances. Zero fill has zero solid
+alpha; full-green states use the entire bottom frame. Warning rotation is
+static and its opacity stays independent of the actual resource fill.
+
+The unchanged nominal angles and pure `ArcRenderer.Range` calculation preserve
+symmetric HP depletion, side bottom-up fill, and center-out GCD/Heavy/channel.
+Crossfading is a close angular approximation between adjacent frames, not an
+engine polar mask. Antialiased overlap can differ slightly from ideal linear
+coverage at translucent boundaries. Verify it visually during slow fills.
+
+There are now **13 controls per default ring** (10 solids, 3 warnings), versus
+1,856 before; live plus three previews uses 52 rather than 7,424. No per-frame
+tables, textures or controls are created. Existing fill/color/glow caches remain.
+GPU texture memory increases; actual client performance is still unmeasured.
+No snapping or UI-scale setting was introduced. Dot/Rays/feedback are unchanged
+from the preceding commit and remain independent of ResourceRing.
+
+Manual geometry edits retain their existing exact procedural behavior through
+the lazily created `Rendering/SegmentedArcRenderer.lua` fallback. To get smooth
+curved textures for changed radius/thickness/length, rerun the generator. The
+generated `Rendering/ArcAssets.lua` describes the baked geometry, so stale
+assets cannot silently stretch the wrong thickness or gaps. Normal released
+settings match the shipped assets and never allocate the fallback.
+
+Changed: HUD/ResourceRing.lua, manifest, deployment folder allowlist, Config
+comments, renderer-coupled test assertions and the three project docs. Added:
+Rendering/{ArcAssets,ArcRenderer,SegmentedArcRenderer}.lua, three DDS assets,
+tools/generate_arcs.py and tests/arc_assets.py. Old renderer geometry remains
+available in the fallback and Git baseline for comparison.
+
+Validation: existing Lua 5.1 behavior scenarios and seven locale/API checks pass;
+new renderer checks cover control count, zero/full/intermediate fill, opacity,
+atlas UV bounds, symmetric centers, fixed lower side endpoints, Shield
+alignment and switching into/out of geometry fallback. Decoded DDS pixel tests
+verify BC3, 65 monotonic fill frames, fill proportions, intermediate alpha,
+white RGB, original radius/thickness and outward warning. An offline preview
+of the actual compressed assets was visually inspected; it is not ESO output.
+
+After `/reloadui`, inspect the four full curved contours and caps first, then
+HP symmetry, bottom-up side fills, Shield overlap, full low-resource warnings,
+and center-out GCD/Heavy/channel with full-green readiness. Check slow progress
+for frame stepping, opacity pulsing, atlas bleed or reversed side rotation;
+test preview, OFF/fades and multiple ESO UI scales. Gameplay cancellation,
+ownership and cue timing should remain unchanged. **The new in-game visual
+acceptance is still pending; passing tests does not establish smoothness.**
+
+## Historical first attempt (rejected in client)
+
 Baseline renderer: Git revision `e2922bc224d4f66c318f3c10cef087f741bb7826`.
 This preserves the old source and exact geometry for comparison. Client visual
 acceptance is pending; mocked controls cannot demonstrate engine antialiasing.

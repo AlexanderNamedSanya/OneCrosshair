@@ -45,14 +45,18 @@ test("resources smooth and shield clamped against maximum health", function()
 end)
 test("fixed arc directions and centered health/bottom fill", function()
     local ring = O.runtime.ring
+    assert(ring.textured)
     for _,key in ipairs({"health","bottom"}) do
-        local arc = ring.arcs[key]; close(arc[1].threshold,arc[64].threshold)
-        assert(arc[32].threshold < arc[1].threshold)
+        local a,b,center = O.ArcRenderer.Range(key,.5,ring.length)
+        close(center-a,b-center)
+        local _,_,fullCenter=O.ArcRenderer.Range(key,1,ring.length)
+        close(center,fullCenter)
     end
     for _,key in ipairs({"magicka","stamina"}) do
-        local arc = ring.arcs[key]
-        assert(arc[1].control.anchor[5] > arc[64].control.anchor[5])
-        assert(arc[1].threshold < arc[64].threshold)
+        local a,b=O.ArcRenderer.Range(key,.5,ring.length)
+        local fullA,fullB=O.ArcRenderer.Range(key,1,ring.length)
+        if key=="magicka" then close(a,fullA); assert(b<fullB)
+        else close(b,fullB); assert(a>fullA) end
     end
 end)
 test("optional effects threshold boundaries", function()
@@ -153,30 +157,26 @@ end)
 test("warning spans the empty resource and fades outward independently of solid fill", function()
     local ring = O.runtime.ring
     O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,true)
-    for _,point in ipairs(ring.arcs.health) do
-        assert(point.glows[1].color[4] > point.glows[4].color[4])
-        assert(point.glows[4].color[4] > 0)
-        if point.threshold > .12 then close(point.control.color[4],0) end
-    end
+    close(ring.arcs.health.glow.color[4],.6)
+    close(ring.arcs.health.fill,.1)
+    O.ResourceRing.Draw(ring,"health",0,O.runtime.health.color,1,true)
+    close(ring.arcs.health.glow.color[4],.6)
+    close(ring.arcs.health.first.color[4],0); close(ring.arcs.health.second.color[4],0)
     O.ResourceRing.Draw(ring,"health",.1,O.runtime.health.color,1,false)
-    for _,point in ipairs(ring.arcs.health) do
-        for _,glow in ipairs(point.glows) do close(glow.color[4],0) end
-    end
+    close(ring.arcs.health.glow.color[4],0)
 end)
 
 test("circular geometry and shield use the same path and outward-only 200 percent glow", function()
     local ring = O.runtime.ring
-    local function radius(c) return math.sqrt(c.anchor[4]^2+c.anchor[5]^2) end
     local top = ring.arcs.health
-    close(top[1].control.thickness*.9,5); close(ring.arcs.shield[1].control.thickness*.9,7)
-    for i=1,64 do
-        close(radius(top[i].control),45.25)
-        close(top[i].control.anchor[4],ring.arcs.shield[i].control.anchor[4])
-        close(top[i].control.anchor[5],ring.arcs.shield[i].control.anchor[5])
-        local inner,outer=top[i].glows[1],top[i].glows[#top[i].glows]
-        close(radius(inner)-inner.thickness*.9/2,45.25+2.5)
-        close(radius(outer)+outer.thickness*.9/2,45.25+2.5+10)
-    end
+    close(O.ArcAssets.radius,45.25); close(O.ArcAssets.thickness,5)
+    close(top.first.width,2*O.ArcAssets.extent)
+    close(top.first.width,ring.arcs.shield.first.width)
+    close(top.first.anchor[4],ring.arcs.shield.first.anchor[4])
+    close(top.first.anchor[5],ring.arcs.shield.first.anchor[5])
+    local a,b=O.ArcRenderer.Range("health",.5,ring.length)
+    local sa,sb=O.ArcRenderer.Range("shield",.5,ring.length)
+    close(a,sa); close(b,sb)
     close(O.PresetRegistry.Get("dot").elements[1].size,1.5)
 end)
 
@@ -198,9 +198,9 @@ test("low health warns without dimming other resources and respects its switch",
     close(O.runtime.ring.arcs.health.fill,.1)
     close(O.runtime.ring.arcs.magicka.alpha, O.settings.hudOpacity)
     close(O.runtime.ring.arcs.bottom.alpha, O.settings.hudOpacity*.25)
-    assert(O.runtime.ring.arcs.health[1].glows[1].color[4]>0)
+    assert(O.runtime.ring.arcs.health.glow.color[4]>0)
     O.settings.lowResource = false; O.Runtime.Update(O.runtime)
-    close(O.runtime.ring.arcs.health[1].glows[1].color[4],0)
+    close(O.runtime.ring.arcs.health.glow.color[4],0)
     O.settings.lowResource = true; T.powers[1] = 26; O.Runtime.Update(O.runtime)
-    close(O.runtime.ring.arcs.health[1].glows[1].color[4],0)
+    close(O.runtime.ring.arcs.health.glow.color[4],0)
 end)

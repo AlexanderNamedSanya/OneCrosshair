@@ -1,6 +1,7 @@
 -- Deliberately explicit API surface. Unknown functions cause normal Lua errors.
 CT_CONTROL, CT_TEXTURE, CT_LABEL, CENTER, TOPLEFT, TOPRIGHT, TOP = 1, 2, 3, 4, 5, 6, 7
 CT_LINE, BOTTOMRIGHT = 8, 9
+TEX_BLEND_MODE_ALPHA = 1
 COMBAT_MECHANIC_FLAGS_HEALTH, COMBAT_MECHANIC_FLAGS_MAGICKA, COMBAT_MECHANIC_FLAGS_STAMINA = 1, 2, 4
 ATTRIBUTE_VISUAL_POWER_SHIELDING, STAT_MITIGATION, ATTRIBUTE_HEALTH = 10, 11, 12
 ACTION_BAR_FIRST_NORMAL_SLOT_INDEX, ACTION_BAR_ULTIMATE_SLOT_INDEX = 2, 7
@@ -31,6 +32,7 @@ function methods:SetAlpha(v) self.alpha = v end
 function methods:SetScale(v) self.scale = v end
 function methods:SetTextureRotation(v) self.rotation = v end
 function methods:SetDrawLevel(v) self.level = v end
+function methods:SetBlendMode(v) self.blendMode = v end
 function methods:SetMouseEnabled(v) self.mouse = v end
 function methods:SetFont(v) self.font = v end
 function methods:SetText(v) self.text = v end

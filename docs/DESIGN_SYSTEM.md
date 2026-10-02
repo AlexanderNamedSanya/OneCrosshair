@@ -1,8 +1,9 @@
 # Design system
 
-Stroke edges now use a shared white alpha texture. Approved dimensions refer
-to its half-alpha contour; a small transparent fringe surrounds that contour.
-No geometry, spacing, timing or opacity redesign. See RENDERING_QUALITY.md.
+The ring now uses curved alpha masks, retaining radius 45.25, solid thickness 5,
+Shield thickness 7 and 81-degree quadrants. Warning falloff is continuous rather
+than eight hard bands. Source edge coverage transitions span .7 UI units around
+the approved boundaries. Dot, spacing and timing are unchanged. See RENDERING_QUALITY.md.
 
 Two independently centered layers: preset crosshair and resource ring. The five geometry/opacity controls are removed from the UI for release 1.0; commented code values live in Core/Config.lua.
 
