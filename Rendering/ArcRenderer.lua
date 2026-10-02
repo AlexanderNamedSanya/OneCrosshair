@@ -35,7 +35,8 @@ function R.New(parent, name)
     if name == "health" or name == "magicka" or name == "stamina" then
         arc.glow = Texture(parent, "ArcWarning", 0)
         local _, _, center = R.Range(name, 1, assets.length)
-        arc.glow:SetTextureRotation(center + math.pi / 2, .5, .5)
+        -- ESO texture rotation runs opposite to our screen-space polar angles.
+        arc.glow:SetTextureRotation(-(center + math.pi / 2), .5, .5)
     end
     return arc
 end
@@ -48,7 +49,7 @@ local function Frame(control, name, frame)
     control:SetTextureCoords(column / assets.columns, (column + 1) / assets.columns,
         row / assets.rows, (row + 1) / assets.rows)
     local _, _, center = R.Range(name, frame / assets.steps, assets.length)
-    control:SetTextureRotation(center + math.pi / 2, .5, .5)
+    control:SetTextureRotation(-(center + math.pi / 2), .5, .5)
 end
 function R.Draw(arc, name, fill, color, alpha, glowing)
     fill, alpha = O.Clamp(fill), O.Clamp(alpha)

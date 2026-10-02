@@ -24,6 +24,22 @@ for name,arc in pairs(ring.arcs) do
     end
 end
 assert(count==13)
+-- Client-confirmed texture rotation is opposite to screen-space polar angles.
+-- Check the rendered side and fixed lower endpoint, not just logical ranges.
+for _,name in ipairs({"magicka","stamina"}) do
+    local arc=ring.arcs[name]
+    for _,fill in ipairs({.25,.5,1}) do
+        O.ResourceRing.Draw(ring,name,fill,{1,1,1},.5,true)
+        local center=-math.pi/2-arc.first.rotation
+        assert(name=="magicka" and math.cos(center)<0 or name=="stamina" and math.cos(center)>0)
+        local half=math.pi*.225*fill
+        local lower=name=="magicka" and center-half or center+half
+        close(math.sin(lower),math.sin(math.pi*.225))
+        local glowCenter=-math.pi/2-arc.glow.rotation
+        close(math.cos(glowCenter),name=="magicka" and -1 or 1)
+    end
+end
+print("PASS ESO texture rotation: Magicka left, Stamina right, lower endpoints and warnings aligned")
 for _,fill in ipairs({0,.1,.5,1}) do
     local ha,hb=O.ArcRenderer.Range("health",fill,90)
     local sa,sb=O.ArcRenderer.Range("shield",fill,90)

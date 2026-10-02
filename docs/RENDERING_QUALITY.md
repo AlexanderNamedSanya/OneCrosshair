@@ -2,6 +2,11 @@
 
 ## Current correction after failed client acceptance
 
+Client follow-up showed the sides mirrored: ESO texture rotation has the
+opposite sign to the renderer's screen-space polar angles. The rotation
+conversion now negates that angle for solid frames and warnings, restoring
+Magicka left and Stamina right while keeping their lower endpoints fixed.
+
 The supplied ESO screenshot shows visible stair steps after commit `98e4540`.
 That pass did not achieve the requested smoothness; smoothing the native line
 texture was insufficient. Its report below is historical, not the current
