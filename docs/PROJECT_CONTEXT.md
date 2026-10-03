@@ -17,7 +17,11 @@ OneCrosshair is an ESO addon replacing the decorative crosshair and adding a lig
 - Automatic isolated three-state settings preview and reversible vanilla decorative-reticle hiding.
 - Lua 5.1 mock contract suite, engine-symbol checks against inspected documentation, deterministic DDS generation.
 
-## Current release: 1.0 — oneDOK
+## Current release: 26.1 — oneDOK
+
+Release 26.1 packages the curved-texture ring, corrected side rotation, softened Rays strokes and independent 180 ms low-resource warning appearance introduced after the previous 1.0 archive. Manifest and addon-panel version are 26.1. See RELEASE_26_1.md for changes and installation. External publication and in-game visual acceptance remain pending.
+
+## Previous release: 1.0 — oneDOK
 
 Dot and Large Dots are halved to 3/15 UI units; small-dot spread increases 25%. The player’s persisted appearance was read from the ESO SavedVariables file: length 90%, radius 45.25, thickness 5, custom crosshair opacity .65, HUD .50. These are now commented constants in Core/Config.lua. All five sliders are removed from the UI; legacy appearance values cannot override the code config. Other saved choices are preserved.
 

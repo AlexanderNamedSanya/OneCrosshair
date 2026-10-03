@@ -7,7 +7,7 @@ local function color(r,g,b,a)
 end
 
 test("release metadata and fixed appearance remain while UI has no sliders", function()
-    assert(O.version=="1.0" and O.author=="oneDOK" and LibAddonMenu2.data.author=="oneDOK")
+    assert(O.version=="26.1" and O.author=="oneDOK" and LibAddonMenu2.data.author=="oneDOK")
     close(O.settings.resourceLength,90); close(O.settings.resourceRadius,45.25)
     close(O.settings.resourceThickness,5); close(O.settings.crosshairOpacity,.65); close(O.settings.hudOpacity,.5)
     for _,option in ipairs(LibAddonMenu2.options) do assert(option.type~="slider") end
